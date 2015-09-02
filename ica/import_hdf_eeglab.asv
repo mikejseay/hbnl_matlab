@@ -1,0 +1,48 @@
+%define the h1 file
+data_file='C:\Users\Mike\Desktop\ica test\ern_8_a1_40001015_256_cnt.h1';
+
+%pull out the set name automatically
+[pathstr,setname,~]=fileparts(data_file);
+
+%get the CNT data
+cnt_data=h1_struct.data_struct.hdf1_cnt_data(:,1:end-19);
+
+%get the sampling rate
+cnt_srate=h1_struct.experiment_struct.rate;
+
+%read the HDF file
+h1_struct = read_hdf1_dataV7(data_file);
+
+%start EEGLAB
+[ALLEEG EEG CURRENTSET ALLCOM] = eeglab;
+
+%import data
+EEG = pop_importdata('setname',setname,'data','cnt_data','dataformat','array',...
+    'subject',setname(10:17),'session',setname(1:9),'nbchan',size(cnt_data,1),...
+    'srate',cnt_srate);
+
+%pull data into eeglab and check it
+eeglab redraw
+
+%remove extra 3 channels
+EEG = pop_select( EEG,'nochannel',[32 63 64] );
+[ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 1,'overwrite','on','gui','off'); 
+EEG = eeg_checkset( EEG );
+
+%add channel locations to remaining channels
+EEG=pop_chanedit(EEG, 'lookup','A:\\matlab\\eeglab13_4_4b\\plugins\\dipfit2.3\\standard_BEM\\elec\\standard_1005.elc','load',{'A:\\matlab\\coords\\61chans_ns.ced' 'filetype' 'autodetect'},'changefield',{47 'type' ''},'changefield',{47 'datachan' 1});
+[ALLEEG EEG] = eeg_store(ALLEEG, EEG, CURRENTSET);
+
+%create an event array
+type=h1_struct.trial_struct.case_num;
+latency=h1_struct.trial_struct.time_offset;
+rt=h1_struct.trial_struct.response_latency;
+resp=h1_struct.trial_struct.response_id;
+trial_events=[type;latency;rt;resp]';
+
+%import events
+EEG = pop_importevent(EEG, 'event', trial_events, 'fields',...
+    {'type', 'latency', 'rt', 'resp'}, 'timeunit', 1);
+
+%redraw eeglab
+eeglab redraw

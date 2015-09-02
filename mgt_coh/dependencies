@@ -1,0 +1,30 @@
+%list of all dependencies for plotting code so far
+
+1. must have mats containing:
+    -data processing parameters (param_struct)
+    -corresponding channel information (chan_locs)
+    -list of .mat files containing data (mat_list)
+    -corresponding demographic info (i.e. Group, Sex, Age) -> s_demogs
+    
+2. must have the following aux_functions:
+    v2struct
+    distinguishable_colors
+    colorspace
+    numSubplots
+    pmkmp
+    vline
+    baseline_erp_datastruct
+    filter_erp_datastruct
+    peakfinder
+    barweb
+    clear_plotassistvars
+    clickableLegend
+    contour_wrapedges
+    dac
+    deunwrap
+    dragzoom
+    rad2deg
+    shadedErrorBar
+    tightfig
+    topoplot
+    wind_rose
