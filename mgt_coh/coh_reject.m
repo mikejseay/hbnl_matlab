@@ -63,7 +63,7 @@ end
 %trials per condition)
 %trial_thresh=ceil(mean(n_trials_all,2)-std(n_trials_all,0,2));
 if true
-trials_necessary=9;
+trials_necessary=15;
 trial_thresh=trials_necessary*ones(imp.maxconds,1);
 for chosen_s=1:imp.s_valid
     s_logic(chosen_s,3)=all(n_trials_all(:,chosen_s) > trial_thresh);

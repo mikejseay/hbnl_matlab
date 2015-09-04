@@ -10,7 +10,7 @@ s_inds_g=false(length(s_inds),11);
 %load('/export/home/mike/matlab/fmri/fmri_subs_withsession.mat')
 %load('/export/home/mike/matlab/mgt_coh/ern_demog_ctl.mat')
 %load('/export/home/mike/matlab/fmri/fmri_gng_subs_demogs.mat')
-load('/export/home/mike/matlab/fmri/fmri_demogs_simple.mat')
+load('/export/home/mike/matlab/origin/fmri/fmri_demogs_simple.mat')
 
 n_files=length(mat_list);
 

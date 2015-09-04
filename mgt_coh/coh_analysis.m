@@ -1,21 +1,28 @@
 %% SCATTER ERPCOH
 % PAIRS
 
-pair_subset=[4 11 14];
 scatter_limits=[0 1];
 
-%s_high_coh=zeros(length(pair_subset),length(pp.chosen_freq),pp.maxwin,10);
-p_tfwin=zeros(2,length(pair_subset),length(pp.chosen_freq),pp.maxwin);
-for pair=pair_subset
+sp_rowlabel={scl.f_nlabel{pp.chosen_freq}};
+sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
+x_plotlabel=scl.cond_label{pp.cond_diff{1}};
+y_plotlabel=scl.cond_label{pp.cond_diff{2}};
+
+%s_high_coh=zeros(length(pp.chosen_p),length(pp.chosen_freq),pp.maxwin,10);
+p_tfwin=zeros(2,length(pp.chosen_p),length(pp.chosen_freq),pp.maxwin,length(pp.chosen_g));
+for pair=pp.chosen_p(pp.plotn_p)
     figure; subplot_dummy=0;
+    overtitle=['Scatter Plot of ERPCOH for ',scl.p_label{pair}];
     for freq=pp.chosen_freq
         for win=1:pp.maxwin
-            subplot_dummy=subplot_dummy+1;
             [~,t_start]=min(abs(scl.t_ms-pp.t_start_ms(win)));
             [~,t_end]=min(abs(scl.t_ms-pp.t_end_ms(win)));
+            subplot_dummy=subplot_dummy+1;
+            subplot(length(pp.chosen_freq),pp.maxwin,subplot_dummy);
             %
-            coh_scatterdata_x=squeeze(mean(mean(cohdata(t_start:t_end,freq,pp.cond_diff{1},pair,s_inds_g(:,scl.g_all)),1),3));
-            coh_scatterdata_y=squeeze(mean(mean(cohdata(t_start:t_end,freq,pp.cond_diff{2},pair,s_inds_g(:,scl.g_all)),1),3));
+            for group=pp.chosen_g
+            coh_scatterdata_x=squeeze(mean(mean(cohdata(t_start:t_end,freq,pp.cond_diff{1},pair,s_inds_g(:,group)),1),3));
+            coh_scatterdata_y=squeeze(mean(mean(cohdata(t_start:t_end,freq,pp.cond_diff{2},pair,s_inds_g(:,group)),1),3));
             %test out a baseline subtraction
             %coh_scatterdata_x=squeeze(mean(mean(cohdata(t_start:t_end,freq,pp.cond_diff{1},pair,s_inds_g(:,scl.g_all)),1),3))-squeeze(mean(mean(cohdata(1:scl.t_zero,freq,pp.cond_diff{1},pair,s_inds_g(:,scl.g_all)),1),3));
             %coh_scatterdata_y=squeeze(mean(mean(cohdata(t_start:t_end,freq,pp.cond_diff{2},pair,s_inds_g(:,scl.g_all)),1),3))-squeeze(mean(mean(cohdata(1:scl.t_zero,freq,pp.cond_diff{1},pair,s_inds_g(:,scl.g_all)),1),3));
@@ -23,25 +30,26 @@ for pair=pair_subset
             %note the subject indices of high coh values
             %s_high_coh(pair,freq,win,1:length(find(coh_scatterdata_x>.9 & coh_scatterdata_y>.9)))=find(coh_scatterdata_x>.9 & coh_scatterdata_y>.9);
             %
-            p_tfwin(:,pair,freq,win)=polyfit(coh_scatterdata_x,coh_scatterdata_y,1);
+            p_tfwin(:,pair,freq,win,group)=polyfit(coh_scatterdata_x,coh_scatterdata_y,1);
             %
-            subplot(length(pp.chosen_freq),pp.maxwin,subplot_dummy);
-            scatter(coh_scatterdata_x,coh_scatterdata_y); hold on;
-            plot(linspace(scatter_limits(1),scatter_limits(2),100),linspace(scatter_limits(1),scatter_limits(2),100),'k--')
-            plot(linspace(scatter_limits(1),scatter_limits(2),100),linspace(scatter_limits(1),scatter_limits(2),100)*p_tfwin(1,pair,freq,win)+p_tfwin(2,pair,freq,win)); hold off;
-            title(sprintf('%d - %d, %d Hz, %s',pp.t_start_ms(win),pp.t_end_ms(win),round(scl.freqs(freq)),scl.p_label{pair}));
-            xlabel([scl.cond_label{pp.cond_diff{1}}])
-            ylabel([scl.cond_label{pp.cond_diff{2}}])
+            scatter(coh_scatterdata_x,coh_scatterdata_y,scl.g_color{group}); hold on;
+            plot(linspace(scatter_limits(1),scatter_limits(2),100),linspace(scatter_limits(1),scatter_limits(2),100)*p_tfwin(1,pair,freq,win,group)+p_tfwin(2,pair,freq,win,group),scl.g_color{group});
+            end
+            plot(linspace(scatter_limits(1),scatter_limits(2),100),linspace(scatter_limits(1),scatter_limits(2),100),'k--'); hold off;
+            %title(sprintf('%d - %d, %d Hz, %s',pp.t_start_ms(win),pp.t_end_ms(win),round(scl.freqs(freq)),scl.p_label{pair}));
+            %xlabel([scl.cond_label{pp.cond_diff{1}}])
+            %ylabel([scl.cond_label{pp.cond_diff{2}}])
+            axis([0 1 0 1])
         end
     end
+    adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle);
     tightfig; dragzoom;
 end
 %unique(s_high_coh)
+clear_plotassistvars
 
 %% HISTOGRAM ERPCOH
 % PAIRS
-
-pair_subset=[4 11 14];
 
 seed_pairs=[13 14 16:23 25:30;31:34,40:41,44:45,48:49,55:60;61:76];
 seed_label={'FZ','CZ','PZ'};
@@ -78,6 +86,7 @@ for freq=pp.chosen_freq
 end
 tightfig; dragzoom;
 end
+clear_plotassistvars
 
 %% look at scl.freqs for all conditions averaged across seeds, averaged across all S's
 
@@ -113,38 +122,39 @@ for seed=1:3
 %linkaxes(sp(1:end-1))
 end
 tightfig; dragzoom; distFig('s','ext');
+clear_plotassistvars
 
 %% image coherence in time-freq at a chosen pair
 
-pair_subset=[4 11 14];
-%pair_subset=1:14;
+
+%pp.chosen_p=1:14;
 
 pp.figdum_init=pp.figdum;
 v=zeros(length(pp.chosen_g),imp.maxpairs,length(pp.plotn_cond),2);
 for group=pp.chosen_g(pp.plotn_g)
-for chosen_pair=pair_subset
+for pair=pp.chosen_p(pp.plotn_p)
     pp.figdum=pp.figdum+1;
     figure(pp.figdum); subplot_dummy=0; 
-    %overtitle=sprintf('Phase Coherence between %s for %s',scl.p_label{chosen_pair},scl.g_label{group});
+    %overtitle=sprintf('Phase Coherence between %s for %s',scl.p_label{pair},scl.g_label{group});
     for cond=pp.plotn_cond
         subplot_dummy=subplot_dummy+1;
         subplot(sp_d(1),sp_d(2),subplot_dummy)
         if cond==imp.maxconds+1
-            coh_tf_data=mean(atanh(cohdata(:,:,pp.cond_diff{1},chosen_pair,s_inds_g(:,group))),5) - ...
-                mean(atanh(cohdata(:,:,pp.cond_diff{2},chosen_pair,s_inds_g(:,group))),5);
+            coh_tf_data=mean(atanh(cohdata(:,:,pp.cond_diff{1},pair,s_inds_g(:,group))),5) - ...
+                mean(atanh(cohdata(:,:,pp.cond_diff{2},pair,s_inds_g(:,group))),5);
         else
-            coh_tf_data=mean(atanh(cohdata(:,:,cond,chosen_pair,s_inds_g(:,group))),5);
+            coh_tf_data=mean(atanh(cohdata(:,:,cond,pair,s_inds_g(:,group))),5);
         end
         contourf(fliplr(coh_tf_data)',pp.n_contour);
         colormap(pmkmp(256,pp.pmkmp_scheme))
         shading flat
-        %imagesc(mean(cohstats(:,:,cond,chosen_pair,s_inds_g(:,group)),5)');
+        %imagesc(mean(cohstats(:,:,cond,pair,s_inds_g(:,group)),5)');
         %axis([scl.t_start scl.t_end 3 imp.maxfreqs-2]);
         axis([scl.t_start scl.t_end 1 20]);
-        v(group, chosen_pair,subplot_dummy,:) = caxis;
+        v(group, pair,subplot_dummy,:) = caxis;
         set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); xlabel('Time (ms)');
         set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); ylabel('Frequency (Hz)');
-        title([scl.p_label{chosen_pair},' / ',scl.cond_label{cond},' / ',scl.g_label{group}]); grid on;
+        title([scl.p_label{pair},' / ',scl.cond_label{cond},' / ',scl.g_label{group}]); grid on;
         hold on; plot(ones(imp.maxfreqs,1)*scl.t_zero,linspace(1,imp.maxfreqs,imp.maxfreqs),'k--'); hold off;
     end
     %adorn_plots({'conds','Loss-Gain'},{'Gain','Loss'},'Time (ms)','Frequency (Hz)',overtitle);
@@ -165,6 +175,7 @@ for fig=pp.figdum_init+1:pp.figdum
     end
     tightfig;
 end
+clear_plotassistvars
 
 %% SCATTER ERPCOH WITH AGE
 
@@ -222,10 +233,7 @@ end
 end
 clear_plotassistvars
 
-
 %% ERPCOH - create condition bar plots with error bars
-
-pair_subset=[4 11 14];
 
 sp_rowlabel=make_freqlabels(pp.f_start_hz(pp.plotn_f),pp.f_end_hz(pp.plotn_f));
 sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
@@ -238,13 +246,13 @@ bw_ylabel=[];
 bw_colormap=bone; %pmkmp(length(barvalues),'cubicl');
 gridstatus='y';
 error_sides=1;
-legend_type=[]; %'plot'
+legend_type='plot';
 bar_glabel={scl.g_label{pp.chosen_g(pp.plotn_g)}};
 %bar_condlabel={'Go','NoGo'};
-bar_condlabel=[]; %{scl.cond_label{pp.plotn_cond}};
+bar_condlabel={scl.cond_label{pp.plotn_cond(1:end-1)}};
 
 %figures are chans, columns are time windows, rows are frequency bands
-for pair=pair_subset
+for pair=pp.chosen_p(pp.plotn_p)
 figure;
 subplot_dummy=0;
 overtitle=scl.p_label{pair};
@@ -290,34 +298,32 @@ clear_plotassistvars
 
 %% image the coherence statistic in time-freq at a chosen pair
 
-%pair_subset=[4 11 14];
-pair_subset=1:14;
-
+%
 pp.figdum_init=pp.figdum;
 v=zeros(length(pp.chosen_g),imp.maxpairs,length(pp.plotn_cond),2);
 for group=pp.chosen_g(pp.plotn_g)
-for chosen_pair=pair_subset
+for pair=pp.chosen_p(pp.plotn_p)
     pp.figdum=pp.figdum+1;
     figure(pp.figdum); subplot_dummy=0; 
     for cond=pp.plotn_cond
         subplot_dummy=subplot_dummy+1;
         subplot(sp_d(1),sp_d(2),subplot_dummy)
         if cond==imp.maxconds+1
-            coh_tf_data=mean(cohstats(:,:,pp.cond_diff{1},chosen_pair,s_inds_g(:,group)),5) - ...
-                mean(cohstats(:,:,pp.cond_diff{2},chosen_pair,s_inds_g(:,group)),5);
+            coh_tf_data=mean(cohstats(:,:,pp.cond_diff{1},pair,s_inds_g(:,group)),5) - ...
+                mean(cohstats(:,:,pp.cond_diff{2},pair,s_inds_g(:,group)),5);
         else
-            coh_tf_data=mean(cohstats(:,:,cond,chosen_pair,s_inds_g(:,group)),5);
+            coh_tf_data=mean(cohstats(:,:,cond,pair,s_inds_g(:,group)),5);
         end
         contourf(fliplr(coh_tf_data)');
         colormap(pmkmp(256,pp.pmkmp_scheme))
         shading flat
-        %imagesc(mean(cohstats(:,:,cond,chosen_pair,s_inds_g(:,group)),5)');
+        %imagesc(mean(cohstats(:,:,cond,pair,s_inds_g(:,group)),5)');
         %axis([scl.t_start scl.t_end 3 imp.maxfreqs-2]);
         axis([scl.t_start scl.t_end 1 20]);
-        v(group, chosen_pair,subplot_dummy,:) = caxis;
+        v(group, pair,subplot_dummy,:) = caxis;
         set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); xlabel('Time (ms)');
         set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); ylabel('Frequency (Hz)');
-        title([scl.p_label{chosen_pair},' / ',scl.cond_label{cond},'/',scl.g_label{group}]); grid on;
+        title([scl.p_label{pair},' / ',scl.cond_label{cond},'/',scl.g_label{group}]); grid on;
         hold on; plot(ones(imp.maxfreqs,1)*scl.t_zero,linspace(1,imp.maxfreqs,imp.maxfreqs),'k--'); hold off;
         colorbar;
     end
@@ -417,16 +423,19 @@ end
 
 %% coherence in frequency band as topoplot with colored lines indicating strength, multiple time windows
 
+sp_rowlabel=scl.cond_label;
+sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
+x_plotlabel='Time Windows';
+y_plotlabel='Conditions';
+
 %define re-scaling constants
 linescale=[1,256];
 
 %choose pair sub-set
-pair_subset=[4 11 14];
-
 cbar_ticks=4;
 
-line_limit=[-0.06 0.15];
-line_limit_diff=[-0.06 0.15];
+line_limit=[-0.04 0.19];
+line_limit_diff=[-0.12 0.09];
 
 coh_linescale_mat=zeros(length(pp.plotn_cond),length(pp.chosen_g),length(pp.t_start_ms),length(pp.f_start_hz),imp.maxpairs);
 dummydata=ones(length(chan_locs),1)*0.3;
@@ -438,6 +447,7 @@ for freq_range=pp.plotn_f
     [~,f_end]=min(abs(scl.freqs-pp.f_end_hz(freq_range)));
     pp.figdum=pp.figdum+1;
     figure(pp.figdum); subplot_dummy=0;
+    overtitle{pp.figdum}=sprintf('Coherence Pairs, %s / %1.1f - %1.1f Hz',scl.g_label{group},pp.f_start_hz(freq_range),pp.f_end_hz(freq_range));
 for cond=pp.plotn_cond
     for win=1:length(pp.t_start_ms)
         [~,t_start]=min(abs(scl.t_ms-pp.t_start_ms(win)));
@@ -478,18 +488,15 @@ for cond=pp.plotn_cond
             %paircoh_color = ceil ( ( paircoh_color - linescale(1) + 1 ) * linescale(2) / ( linescale(2) - linescale(1) + 1 ) );
             paircoh_color = ceil(paircoh_color)+1;
             %define its color based on its strength
-            linecolor=pp.cmap(paircoh_color,:);
+            linecolor=pp.cmap_line(paircoh_color,:);
+            linesize=(paircoh_color/256)*5;
             %direction=mod(pair,2);
             direction=1;
             %plot the arc
-            if cond==imp.maxconds+1
-                Draw_Arc_Clockwise([x(1),y(1)], [x(2),y(2)], linecolor, 2, direction);
-            else
-                Draw_Arc_Clockwise([x(1),y(1)], [x(2),y(2)], linecolor, 2, direction);
-            end
+            Draw_Arc_Clockwise([x(1),y(1)], [x(2),y(2)], linecolor, linesize, direction);
             hold on;
         end
-        hold off; title(sprintf('%s / %s, %d - %d ms, %1.1f - %1.1f Hz',scl.g_label{group},scl.cond_label{cond},pp.t_start_ms(win),pp.t_end_ms(win),pp.f_start_hz(freq_range),pp.f_end_hz(freq_range)))
+        hold off; %title(sprintf('%s / %s, %d - %d ms, %1.1f - %1.1f Hz',scl.g_label{group},scl.cond_label{cond},pp.t_start_ms(win),pp.t_end_ms(win),pp.f_start_hz(freq_range),pp.f_end_hz(freq_range)))
     end
 end
 end
@@ -499,18 +506,20 @@ figure(fig);
 for cond=1:length(pp.plotn_cond)
     subplot(length(pp.plotn_cond),length(pp.t_start_ms),cond*length(pp.t_start_ms))
     if cond==length(pp.plotn_cond)
-        colormap(pp.cmap);
+        colormap(pp.cmap_line);
         colorbar('YTick',linspace(1,256,cbar_ticks),'YTickLabel',cellstr(num2str(linspace(line_limit_diff(1),line_limit_diff(2),cbar_ticks)','%1.2f'))');
     else
-        colormap(pp.cmap);
+        colormap(pp.cmap_line);
         colorbar('YTick',linspace(1,256,cbar_ticks),'YTickLabel',cellstr(num2str(linspace(line_limit(1),line_limit(2),cbar_ticks)','%1.2f'))');
     end
 end
+adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle{fig},[length(pp.plotn_cond),length(pp.t_start_ms)]);
 tightfig;
 end
 coh_linescale_mat(coh_linescale_mat==0)=NaN;
-coh_linescale=[nanmin(nanmin(nanmin(nanmin(nanmin(coh_linescale_mat(1:end-1,:,:,:,:)))))) nanmax(nanmax(nanmax(nanmax(nanmax(coh_linescale_mat(1:end-1,:,:,:,:))))))];
-coh_linescale_diff=[nanmin(nanmin(nanmin(nanmin(nanmin(coh_linescale_mat(end,:,:,:,:)))))) nanmax(nanmax(nanmax(nanmax(nanmax(coh_linescale_mat(end,:,:,:,:))))))];
+c=[nanmin(nanmin(nanmin(nanmin(nanmin(coh_linescale_mat(1:end-1,:,:,:,:)))))) nanmax(nanmax(nanmax(nanmax(nanmax(coh_linescale_mat(1:end-1,:,:,:,:))))))];
+c_diff=[nanmin(nanmin(nanmin(nanmin(nanmin(coh_linescale_mat(end,:,:,:,:)))))) nanmax(nanmax(nanmax(nanmax(nanmax(coh_linescale_mat(end,:,:,:,:))))))];
+clear_plotassistvars
 
 %% image coherence as a topoplot based on seeds
 
@@ -580,10 +589,10 @@ c_diff(1)=min(min(min(v(end,:,:,:,1)))); c_diff(2)=max(max(max(v(end,:,:,:,2))))
 
 %% compare coherence and ITC
 
-pair_subset=[4 11 14]; %14 is FZ-CZ
+ %14 is FZ-CZ
 chosen_chan=7;
 
-for pair=pair_subset
+for pair=pp.chosen_p(pp.plotn_p)
 figure
 
 for group=pp.chosen_g

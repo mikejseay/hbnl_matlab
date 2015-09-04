@@ -88,8 +88,8 @@ x_plotlabel=' ';
 y_plotlabel=' ';
 subplot_dims=[length(pp.plotn_cond),length(pp.t_start_ms)];
 
-erp_topo_scale=[-3 3];
-erp_diff_limits=[-2 2];
+erp_topo_scale=[-4 8];
+erp_diff_limits=[-4 4];
 for group=pp.chosen_g(pp.plotn_g)
 figure; subplot_dummy=0;
 overtitle=sprintf('Topography of ERPs / %s',scl.g_label{group});
@@ -118,7 +118,7 @@ clear_plotassistvars
 
 %% look at EROs in individual bands / superimpose groups
 
-h_line=zeros(length(pp.plotn_cond),length(pp.chosen_g));
+%h_line=zeros(length(pp.plotn_cond),length(pp.chosen_g));
 for chan=pp.chosen_chan(pp.plotn_chan)
 for freq_range=pp.plotn_f
     [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
@@ -140,10 +140,10 @@ for freq_range=pp.plotn_f
             end
             %plot(ero_plot_data,scl.g_color{group}); hold on; %,'Color',scl.s_color(pp.chosen_s,:)); hold on
             h=shadedErrorBar(1:imp.maxtimepts,ero_plot_data,ero_plot_data_std, scl.g_color{group}); hold on;
-            h_line(cond,group)=h.mainLine;
+            %h_line(cond,group)=h.mainLine;
         end
-        axis auto
         vline(scl.t_zero,'k--'); hold off;
+        axis tight
         set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms)
         title([scl.chan_label{chan},'/',scl.cond_label{cond},'/',num2str(pp.f_start_hz(freq_range)),'-',num2str(pp.f_end_hz(freq_range)),' Hz'])
     end
@@ -155,7 +155,7 @@ clear_plotassistvars
 
 %% look at EROS in individual bands / superimpose conditions
 
-ero_yax=[13 25];
+ero_yax=[-20 80];
 
 cond_colors={'r','g','b','m','r--','g--','b--','m--','k--','c'};
 for chan=pp.chosen_chan(pp.plotn_chan)
@@ -256,8 +256,8 @@ x_plotlabel=' ';
 y_plotlabel=' ';
 subplot_dims=[length(pp.plotn_cond),length(pp.t_start_ms)];
 
-ero_topo_scale=[-15 10];
-ero_diff_limits=[-1 3];
+ero_topo_scale=[0 15];
+ero_diff_limits=[-8 2];
 
 v=zeros(length(pp.plotn_cond),length(pp.chosen_g),length(pp.f_start_hz(pp.plotn_f)),length(pp.t_start_ms),2);
 for group=pp.chosen_g(pp.plotn_g)
@@ -610,8 +610,8 @@ x_plotlabel=' ';
 y_plotlabel=' ';
 subplot_dims=[length(pp.plotn_cond),length(pp.t_start_ms)];
 
-itc_topo_scale=[0.1 0.6];
-itc_diff_limits=[-.13 .17];
+itc_topo_scale=[0.1 0.5];
+itc_diff_limits=[-.1 .1];
 
 %
 v=zeros(length(pp.plotn_cond),length(pp.chosen_g),length(pp.f_start_hz(pp.plotn_f)),length(pp.t_start_ms),2);
@@ -668,12 +668,12 @@ bw_ylabel='ITC';
 bw_colormap=bone; %pmkmp(length(barvalues),'cubicl');
 gridstatus='y';
 error_sides=1;
-%legend_type='plot'; %'plot'
-legend_type=[];
+legend_type='plot'; %'plot'
+%legend_type=[];
 bar_glabel={scl.g_label{pp.chosen_g(pp.plotn_g)}};
 %bar_condlabel={'Go','NoGo'};
-%bar_condlabel={scl.cond_label{pp.plotn_cond}};
-bar_condlabel=[];
+bar_condlabel={scl.cond_label{pp.plotn_cond(1:end-1)}};
+%bar_condlabel=[];
 
 %figures are chans, columns are time windows, rows are frequency bands
 for chan=pp.chosen_chan(pp.plotn_chan)
@@ -836,8 +836,8 @@ sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
 x_plotlabel='Age (yrs)';
 y_plotlabel='ERO Power';
 
-ero_axes=[min(s_demogs.age_eeg) max(s_demogs.age_eeg) 10 40];
-ero_axes_diff=[min(s_demogs.age_eeg) max(s_demogs.age_eeg) -2 5];
+ero_axes=[min(s_demogs.age_eeg) max(s_demogs.age_eeg) 40 90];
+ero_axes_diff=[min(s_demogs.age_eeg) max(s_demogs.age_eeg) -10 10];
 
 p_tfwin=zeros(2,length(pp.chosen_chan(pp.plotn_chan)),length(pp.f_start_hz(pp.plotn_f)),pp.maxwin);
 for chan=pp.chosen_chan(pp.plotn_chan)
@@ -1029,7 +1029,7 @@ for freq_range=pp.plotn_f
         [~,p,~,stat]=ttest(zeros(sum(s_inds_g(:,group)),1),itc_histdata);
         z=mean(itc_histdata)/itc_histdata_se;
         text(pp.p_loc(1),pp.p_loc(2),sprintf('z=%1.1f, t=%1.1f, -log(p)=%1.1f',z,stat.tstat,-log10(p)));
-        title(sprintf('%d - %d ms, %1.1f - %1.1f Hz, %s, %s',pp.t_start_ms(win),pp.t_end_ms(win),pp.f_start_hz(freq_range),pp.f_end_hz(freq_range),scl.chan_label{chan},scl.g_label{group}));
+        %title(sprintf('%d - %d ms, %1.1f - %1.1f Hz, %s',pp.t_start_ms(win),pp.t_end_ms(win),pp.f_start_hz(freq_range),pp.f_end_hz(freq_range),scl.chan_label{chan}));
         xlabel([scl.cond_label{pp.cond_diff{1}},'-',scl.cond_label{pp.cond_diff{2}}])
     end
 end

@@ -1,4 +1,5 @@
-function pair_subset=determine_distant_pairs(coords_filepath,exclude_logic,distance_spec,orientation_spec,direction_spec)
+function pair_subset=determine_distant_pairs(coords_filepath,exclude_logic, ...
+    distance_spec,orientation_spec,edges_per_chan,direction_spec)
 
 % determine pairs of electrodes for coherence analyses.
 
@@ -28,6 +29,8 @@ function pair_subset=determine_distant_pairs(coords_filepath,exclude_logic,dista
         % 2 = alternate every other
         % 3 = alternate erratically
         
+    %edges_per_chan indicates how many edges you desire per channel
+        
     % output is the indices of the chosen / plotted pairs
     % as a pairs x 2 matrix, can be used as the input for erp_analysis in
     % the param_struct.
@@ -38,9 +41,9 @@ if isscalar(coords_filepath)
     %if coords spec is a number, load the file with that number of channels
     switch coords_filepath
         case 31
-            load('/export/home/mike/matlab/coords/31chans_ns.mat')
+            load('/export/home/mike/matlab/origin/coords/31chans_ns.mat')
         case 61
-            load('/export/home/mike/matlab/coords/61chans_ns.mat')
+            load('/export/home/mike/matlab/origin/coords/61chans_ns.mat')
     end
 elseif ischar(coords_filepath)
     %if a string, load that location file
@@ -127,7 +130,38 @@ n_chosen_pairs=size(pair_subset,1);
 %assign them colors
 distant_pair_colors=distinguishable_colors(n_chosen_pairs);
 
+%%
+if edges_per_chan > 0
+%determine the degree (number of connections per channel) and reduce to have equal
+%connections across channels
+unique_chans=unique(pair_subset)';
+degree=zeros(n_channels,1);
+%n_uniqchans=length(unique_chans);
+%degrees=zeros(n_channels,1);
+%for chan=unique_chans
+%    degrees(chan)=sum(sum(pair_subset==chan));
+%end
+%min_degs
+for chan=unique_chans
+pair=0;
+while pair<=length(pair_subset)-1
+    pair=pair+1;
+    if any(pair_subset(pair,:)==chan)
+        degree(chan)=degree(chan)+1;
+    end
+    if degree(chan)>edges_per_chan
+        if any(pair_subset(pair,:)==chan)
+            pair_subset(pair,:)=[];
+            pair=pair-1;
+        end
+    end
+end
+end
 
+end
+n_chosen_pairs=size(pair_subset,1);
+
+%%
 %plot them as arcs on a head
 dummy_data=zeros(length(chan_locs),1);
 figure; topoplot(dummy_data,chan_locs,'style','blank'); hold on;
@@ -145,8 +179,16 @@ for chosen_pair=1:n_chosen_pairs
             direction=mod(mod(chosen_pair,3),2);
     end
     %plot the arc
-    Draw_Arc_Clockwise([x(1),y(1)], [x(2),y(2)], distant_pair_colors(chosen_pair,:), 1, direction); hold on;
+    arc_h(chosen_pair)=Draw_Arc_Clockwise([x(1),y(1)], [x(2),y(2)], distant_pair_colors(chosen_pair,:), 3, direction); hold on;
 end
+
+%make labels
+p_label=cell(n_chosen_pairs,1);
+for pair=1:n_chosen_pairs
+    p_label{pair}=[chan_locs(pair_subset(pair,1)).labels,'-',chan_locs(pair_subset(pair,2)).labels];
+end
+
+clickableLegend(arc_h,p_label)
 
 fprintf('%d pairs determined.\n',size(pair_subset,1))
 

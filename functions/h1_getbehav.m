@@ -5,6 +5,13 @@ function cnth1_eventtable=h1_getbehav(h1_struct,trial_init_type)
 
 %trial_init_type=90;
 
+if nargin<2
+    trial_init_skip=true;
+    trial_init_type=[];
+else
+    trial_init_skip=false;
+end
+
 %srate=h1_struct.experiment_struct.rate;
 %n_cases=h1_struct.experiment_struct.n_cases;
 
@@ -25,7 +32,9 @@ trial=zeros(1,n_events);
 type_descriptor=cell(1,n_events);
 errant_response=false(1,n_events);
 for ev=1:n_events
-    if type(ev)==trial_init_type
+    if trial_init_skip
+        trial_count=trial_count+1;
+    elseif type(ev)==trial_init_type
         trial_count=trial_count+1;
     end
     trial(ev)=trial_count;

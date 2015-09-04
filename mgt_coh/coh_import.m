@@ -9,7 +9,7 @@ maxchans=length(param_struct.chan_vec);
 maxpairs=size(param_struct.coherence_pairs,1);
 
 %indicate mats to load
-datatypes={'mean_data','n_trials','wavelet_evk','wavelet_tot','coh_results','behav_data'};
+datatypes={'mean_data','n_trials','wavelet_evk','wavelet_tot','coh_results'};
 
 %pre-allocate vars
 cohdata=zeros(maxtimepts,maxfreqs,maxconds,maxpairs,2);
