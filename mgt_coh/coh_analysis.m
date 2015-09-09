@@ -51,7 +51,8 @@ clear_plotassistvars
 %% HISTOGRAM ERPCOH
 % PAIRS
 
-seed_pairs=[13 14 16:23 25:30;31:34,40:41,44:45,48:49,55:60;61:76];
+%seed_pairs=[13 14 16:23 25:30;31:34,40:41,44:45,48:49,55:60;61:76];
+seed_pairs=[1:30;31:60;61:90];
 seed_label={'FZ','CZ','PZ'};
 
 for seed=1:3
@@ -389,7 +390,7 @@ for seed=1:length(seed_label)
         v(group,seed,cond,:) = caxis;
         set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); xlabel('Time (ms)');
         set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); ylabel('Frequency (Hz)');
-        title([seed_label{seed},' / ',scl.cond_label{cond},' / ',g_label{group}])
+        title([seed_label{seed},' / ',scl.cond_label{cond},' / ',scl.g_label{group}])
         hold on; plot(ones(imp.maxfreqs,1)*scl.t_zero,linspace(1,imp.maxfreqs,imp.maxfreqs),'k--'); hold off;
     end
 end
@@ -422,7 +423,6 @@ for pair=1:imp.maxpairs
 end
 
 %% coherence in frequency band as topoplot with colored lines indicating strength, multiple time windows
-
 sp_rowlabel=scl.cond_label;
 sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
 x_plotlabel='Time Windows';
@@ -434,8 +434,11 @@ linescale=[1,256];
 %choose pair sub-set
 cbar_ticks=4;
 
-line_limit=[-0.04 0.19];
-line_limit_diff=[-0.12 0.09];
+%line_limit=[-0.2 0.2];
+%line_limit_diff=[-0.2 .2];
+%
+line_limit=[-0.02 0.17];
+line_limit_diff=[-0.06 0.08];
 
 coh_linescale_mat=zeros(length(pp.plotn_cond),length(pp.chosen_g),length(pp.t_start_ms),length(pp.f_start_hz),imp.maxpairs);
 dummydata=ones(length(chan_locs),1)*0.3;

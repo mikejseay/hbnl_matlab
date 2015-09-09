@@ -24,12 +24,12 @@ f_indiv_hz=[3.2, 4.6, 5.3, 7.1,  10.7];        %indiv bands
 chosen_freq=[6 10 13 16 19];
 
 chosen_g=[10 11];
-chosen_p=[4 5 10 11];
+chosen_p=[4 5 10 11 14];
 
 %t_start_ms=[0 100 200 300 400 600];
 %t_end_ms=[100 200 300 400 600 800];
 t_win_start=0;
-t_win_end=500;
+t_win_end=400;
 t_win_space=100;
 t_start_ms=[t_win_start:t_win_space:t_win_end];
 t_end_ms=t_start_ms+t_win_space;
@@ -38,7 +38,7 @@ plotn_chan=1:3; %3
 plotn_cond=1:3;
 plotn_f=[1 3];
 plotn_g=1:2;
-plotn_p=[1 3];
+plotn_p=[1 5];
 plotn_t=1:length(t_start_ms);
 
 

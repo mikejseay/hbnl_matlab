@@ -127,11 +127,11 @@ switch orientation_spec
 end
 
 n_chosen_pairs=size(pair_subset,1);
-%assign them colors
-distant_pair_colors=distinguishable_colors(n_chosen_pairs);
 
 %%
+
 if edges_per_chan > 0
+%sort pairs by distance
 %determine the degree (number of connections per channel) and reduce to have equal
 %connections across channels
 unique_chans=unique(pair_subset)';
@@ -159,13 +159,18 @@ end
 end
 
 end
-n_chosen_pairs=size(pair_subset,1);
 
 %%
+n_chosen_pairs=1:size(pair_subset,1);
+%assign them colors
+%n_chosen_pairs=31:60;
+distant_pair_colors=distinguishable_colors(length(n_chosen_pairs));
+%n_chosen_pairs=31:60;
+
 %plot them as arcs on a head
 dummy_data=zeros(length(chan_locs),1);
 figure; topoplot(dummy_data,chan_locs,'style','blank'); hold on;
-for chosen_pair=1:n_chosen_pairs
+for chosen_pair=n_chosen_pairs
     %define [x1 x2], [y1 y2]
     x=[chan_locs(pair_subset(chosen_pair,1)).topo_x chan_locs(pair_subset(chosen_pair,2)).topo_x];
     y=[chan_locs(pair_subset(chosen_pair,1)).topo_y chan_locs(pair_subset(chosen_pair,2)).topo_y];
@@ -179,16 +184,16 @@ for chosen_pair=1:n_chosen_pairs
             direction=mod(mod(chosen_pair,3),2);
     end
     %plot the arc
-    arc_h(chosen_pair)=Draw_Arc_Clockwise([x(1),y(1)], [x(2),y(2)], distant_pair_colors(chosen_pair,:), 3, direction); hold on;
+    arc_h(chosen_pair-30)=Draw_Arc_Clockwise([x(1),y(1)], [x(2),y(2)], distant_pair_colors(chosen_pair,:), 3, direction); hold on;
 end
 
 %make labels
-p_label=cell(n_chosen_pairs,1);
-for pair=1:n_chosen_pairs
+p_label=cell(length(n_chosen_pairs),1);
+for pair=n_chosen_pairs
     p_label{pair}=[chan_locs(pair_subset(pair,1)).labels,'-',chan_locs(pair_subset(pair,2)).labels];
 end
 
-clickableLegend(arc_h,p_label)
+clickableLegend(arc_h,{p_label{n_chosen_pairs}})
 
 fprintf('%d pairs determined.\n',size(pair_subset,1))
 
