@@ -1,7 +1,7 @@
 %% check ERP peak data
 
 figure; subplot_dummy=0;
-for cond=1:imp.maxconds
+for cond=pp.plotn_cond
     subplot_dummy=subplot_dummy+1;
     sp(subplot_dummy)=subplot(sp_d(1),sp_d(2),subplot_dummy);
     for group=pp.chosen_g
@@ -38,7 +38,7 @@ for chan=pp.chosen_chan(pp.plotn_chan)
             h=shadedErrorBar(1:imp.maxtimepts,erp_plot_data,erp_plot_data_std,scl.g_color{group}); hold on;
             h_line(cond,group)=h.mainLine;
         end
-        axis([scl.t_start scl.t_end -10 20]);
+        axis([scl.t_start scl.t_end -5 10]);
         vline(scl.t_zero,'k--'); hold off;
         set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms)
         title([scl.chan_label{chan},'/',scl.cond_label{cond}])

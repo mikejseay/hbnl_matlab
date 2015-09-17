@@ -1,18 +1,32 @@
 %  mobilize behavioral data into better matrices
 
 ns=length(behdata);
-n_conds=size(behdata(1).respRT,2);
+%n_conds=size(behdata(1).respRT,2);
+field_names=fieldnames(behdata);
 
-meanRT=zeros(ns,n_conds);
-medianRT=zeros(ns,n_conds);
-varRT=zeros(ns,n_conds);
-stdRT=zeros(ns,n_conds);
-
-for s=1:ns
+for f=1:length(field_names)
     
-    meanRT(s,:)=behdata(s).respRT(1,:);
-    medianRT(s,:)=behdata(s).respRT(2,:);
-    varRT(s,:)=behdata(s).respRT(3,:);
-    stdRT(s,:)=sqrt(behdata(s).respRT(3,:));
+    field_contents=getfield(behdata,field_names{f});
+    dims=size(squeeze(field_contents));
+    formatter=':,';
+    for d=1:length(dims)-1
+        formatter=[formatter,':,'];
+    end
+    dims(end+1)=ns;
+    eval([field_names{f},'=zeros(dims);'])
+    
+    
+    for s=1:ns
+        
+        eval([field_names{f},'(',formatter,'s)=v2struct(behdata(s),{''fieldNames'',''',field_names{f},'''});'])
+        
+    end
+    eval([field_names{f},'=squeeze(',field_names{f},');'])
     
 end
+
+behdataB=v2struct({'fieldNames',field_names{:}});
+
+clearvars(field_names{:})
+
+clear ns field_names f field_contents dims formatter d s

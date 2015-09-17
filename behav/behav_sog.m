@@ -1,11 +1,11 @@
-function [avgbet_prevoutcome,stdbet_prevoutcome,crit,crit_prevoutcome,avgbet,resp_mat, ...
- prevoutcome_mat,avgbet2_prevoutcome,stdbet2_prevoutcome] = behav_sog(etable)
+function [avgbet_po,stdbet_po,crit,crit_po,avgbet,resp_mat, ...
+ po_mat,avgbet_po2,stdbet_po2] = behav_sog(etable)
 
 % interpet the event sequence in the single-outcome gambling task
 
 % available outs so far
-% avgbet_prevoutcome,stdbet_prevoutcome,crit,crit_prevoutcome,avgbet,resp_mat
-% prevoutcome_mat,avgbet2_prevoutcome,stdbet2_prevoutcome
+% avgbet_po,stdbet_po,crit,crit_po,avgbet,resp_mat
+% po_mat,avgbet_po2,stdbet_po2
 
 n_events=size(etable,1);
 num_prev_outcomes_resp=2;
@@ -22,9 +22,9 @@ resp_catmap=containers.Map(resp_codes,[1,2]);
 resp_mat=zeros(1,2);
 prevamount_mat=zeros(1,4);
 prevamount2_mat=zeros(1,5);
-prevoutcome_mat=zeros(1,5);
+po_mat=zeros(1,5);
 %prevnum_mat=zeros(1,4);
-crit_prevoutcome=zeros(1,4);
+crit_po=zeros(1,4);
 
 prevamount_dum=0;
 prevamount2_dum=0;
@@ -109,8 +109,8 @@ for ev=1:n_events
                 %record the combined amount and categorize it
                 combamount = amount_map(etable.type(ev)) + ...
                     amount_map(etable.type(ev - checkprev_ev));
-                prevoutcome_mat(combamount_map(combamount))= ...
-                    prevoutcome_mat(combamount_map(combamount)) + 1;
+                po_mat(combamount_map(combamount))= ...
+                    po_mat(combamount_map(combamount)) + 1;
                              
             end
             
@@ -121,8 +121,8 @@ for ev=1:n_events
 end
 
 prevamount_mat(prevamount_mat==0)=NaN;
-avgbet_prevoutcome=nanmean(prevamount_mat,1);
-stdbet_prevoutcome=nanstd(prevamount_mat,1);
+avgbet_po=nanmean(prevamount_mat,1);
+stdbet_po=nanstd(prevamount_mat,1);
 respprob=resp_mat/(sum(resp_mat));
 if any(respprob==0 | respprob==1)
     respprob(respprob==0)=1/(2*sum(resp_mat));
@@ -141,12 +141,12 @@ for prevoutcome=1:size(prevamount_mat,2)
         tempprobs(tempprobs==1)=(2*sum(~isnan(prevamount_mat(:,prevoutcome)))-1) / ...
             (2*sum(~isnan(prevamount_mat(:,prevoutcome))));
     end
-    crit_prevoutcome(prevoutcome)=-0.5*( norminv(tempprobs(1),0,1) - norminv(tempprobs(2),0,1) );
+    crit_po(prevoutcome)=-0.5*( norminv(tempprobs(1),0,1) - norminv(tempprobs(2),0,1) );
 end
 
 avgbet=(10*resp_mat(1)+50*resp_mat(2))/sum(resp_mat);
 prevamount2_mat(prevamount2_mat==0)=NaN;
-avgbet2_prevoutcome=nanmean(prevamount2_mat,1);
-stdbet2_prevoutcome=nanstd(prevamount2_mat,1);
+avgbet_po2=nanmean(prevamount2_mat,1);
+stdbet_po2=nanstd(prevamount2_mat,1);
 
 end
