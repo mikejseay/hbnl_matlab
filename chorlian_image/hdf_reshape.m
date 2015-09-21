@@ -29,7 +29,9 @@ function [trial_index, n_samps, data] = hdf_reshape(Xdat, h1_struct, rate, prest
     end
     % factor in baseline length
     baseline_pts = round(prestim_ms / 1000 * rate);
-    %n_samps = n_samps + baseline_pts;
+    % THIS LINE DETERMINES HOW LONG EACH EPOCH IS
+    % COMMENTING IT OUT WILL SAVE SPACE BUT GIVE LESS POST-STIM TIME
+    n_samps = n_samps + baseline_pts;
     %
 	data = zeros(n_samps, n_trials, n_chans);
     %check for complete data from first trial
