@@ -35,7 +35,7 @@ t_start_ms=[t_win_start:t_win_space:t_win_end];
 t_end_ms=t_start_ms+t_win_space;
 
 plotn_chan=1:3; %3
-plotn_cond=1:4;
+plotn_cond=1:3;
 plotn_f=[1 3];
 plotn_g=1:2;
 plotn_p=[1 5];

@@ -1,14 +1,14 @@
-function [trial_index, n_samps, data] = hdf_reshape(Xdat, h1_struct, rate, prestim_ms)
+function [trial_index, n_samps, data] = hdf_reshape(Xdat, h1_struct, pstruct)
 	[total_samps, n_chans] = size(Xdat);
 	n_trials = h1_struct.experiment_struct.n_trials;
 	samp_rate = h1_struct.experiment_struct.rate;
 	trial_index = zeros(n_trials, 1);
-	if rate ~= samp_rate % resample if necessary 
-		Xdat = resample(Xdat, rate, samp_rate);
+	if pstruct.rate ~= samp_rate % resample if necessary 
+		Xdat = resample(Xdat, pstruct.rate, samp_rate);
 	end
 	for m = 1:n_trials
 		trial_index(m) = ...
-			round(h1_struct.trial_struct.time_offset(m) * rate);
+			round(h1_struct.trial_struct.time_offset(m) * pstruct.rate);
     end
 	[n_samps, idx] = min(diff(trial_index));
 	while n_samps == 0
@@ -28,10 +28,15 @@ function [trial_index, n_samps, data] = hdf_reshape(Xdat, h1_struct, rate, prest
 		return
     end
     % factor in baseline length
-    baseline_pts = round(prestim_ms / 1000 * rate);
-    % THIS LINE DETERMINES HOW LONG EACH EPOCH IS
-    % COMMENTING IT OUT WILL SAVE SPACE BUT GIVE LESS POST-STIM TIME
-    n_samps = n_samps + baseline_pts;
+    baseline_pts = round(pstruct.prestim_ms / 1000 * pstruct.rate);
+    % if very long, clip it back a bit
+    if n_samps > pstruct.n_samps + 10
+        n_samps = pstruct.n_samps + 10;
+    end
+    % if want to lengthen baseline onto end
+    if pstruct.lengthen
+        n_samps = n_samps + baseline_pts;
+    end    
     %
 	data = zeros(n_samps, n_trials, n_chans);
     %check for complete data from first trial
