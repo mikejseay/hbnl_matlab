@@ -8,9 +8,13 @@ erpdata=filter_erp_datastruct(erpdata,param_struct.rate, ...
 
 %% baseline (run only once)
 
+if true
+
 baseline_window_ms=[-100 0];
 erpdata=baseline_erp_datastruct(erpdata,scl.t_ms, ...
     baseline_window_ms);
+
+end
 
 %% look at peaks
 
@@ -25,7 +29,7 @@ pkwin_e_ms=550;
 %dopause=false;
 dopause=false;
 
-%
+% P3
 [~,pkwin_s]=min(abs(scl.t_ms-pkwin_s_ms));
 [~,pkwin_e]=min(abs(scl.t_ms-pkwin_e_ms));
 peakmat=zeros(size(s_inds_g,1),imp.maxconds,2);
@@ -55,7 +59,7 @@ for cond=1:imp.maxconds
     title(sprintf('S%d',s)); hold off;
     end
     %
-    peakmat(s,cond,:)=[val,pkwin_s+ind-1];
+    peakmat(s,cond,:)=[val,scl.t_ms(pkwin_s+ind-1)];
 end
 if dopause
     pause

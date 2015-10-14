@@ -1,6 +1,6 @@
 %% animate phase over time as a wind-rose
 
-writerObj = VideoWriter('phasesum2.avi');
+writerObj = VideoWriter('toposummary.avi');
 writerObj.FrameRate = 3;
 open(writerObj);
 

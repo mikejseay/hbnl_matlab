@@ -242,7 +242,7 @@ clear default_option n_default_options n_options
         if param_struct.trial_init_type==90
             etable=h1_getbehav(h1_struct,param_struct.trial_init_type);
             [param_struct.trial_mat,param_struct.case_label,respRT] = ...
-                behavinds_sog(etable);
+                behavinds_sog2(etable);
         end
     end
 	n_cases = max(trial_type); %is this advisable?

@@ -1,6 +1,7 @@
 %% data rejection step
 
 s_logic=false(imp.s_valid,3);
+%s_logic=true(imp.s_valid,3);
 
 %bit to pick out bad data based on high coherence values
 % catches channel pairs that are bridged, using a

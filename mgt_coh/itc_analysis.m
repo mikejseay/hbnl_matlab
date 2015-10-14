@@ -17,9 +17,18 @@ clear_plotassistvars
 
 %% plot ERPS with groups superimposed
 
+warning off MATLAB:linkaxes:RequireDataAxes
+
+pp.figdum=pp.figdum_init;
+
+% [20 22 24 26 28 49 51 59] %
+
 h_line=zeros(length(pp.plotn_cond),length(pp.chosen_g));
 for chan=pp.chosen_chan(pp.plotn_chan)
-    figure;
+    pp.figdum=pp.figdum+1;
+    figure(pp.figdum)
+    %fig(pp.figdum, 'width', 17, 'height', round(17/scl.phi), ...
+    %'font', 'Monospaced', 'fontsize', 10);
     subplot_dummy=0;
     for cond=pp.plotn_cond
         subplot_dummy=subplot_dummy+1;
@@ -38,13 +47,15 @@ for chan=pp.chosen_chan(pp.plotn_chan)
             h=shadedErrorBar(1:imp.maxtimepts,erp_plot_data,erp_plot_data_std,scl.g_color{group}); hold on;
             h_line(cond,group)=h.mainLine;
         end
-        axis([scl.t_start scl.t_end -6 10]);
+        axis([scl.t_start scl.t_end -15 20]);
         vline(scl.t_zero,'k--'); hold off;
         set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms)
+        grid on
         title([scl.chan_label{chan},'/',scl.cond_label{cond}])
     end
 tightfig;
 linkaxes(sp(1:end-1))
+set_print_size(17,17/scl.phi);
 end
 clear_plotassistvars
 
@@ -82,14 +93,80 @@ clear_plotassistvars
 
 %% plot topography of ERPs
 
+warning off MATLAB:hg:patch:CannotUseFaceVertexCDataOfSize0
+
 sp_rowlabel={scl.cond_label{pp.plotn_cond}};
 sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
 x_plotlabel=' ';
 y_plotlabel=' ';
 subplot_dims=[length(pp.plotn_cond),length(pp.t_start_ms)];
 
-erp_topo_scale=[-5 3];
-erp_diff_limits=[-2 2];
+erp_topo_scale=[-8 13];
+erp_diff_limits=[-5 3];
+cmap=makecmap(erp_topo_scale);
+cmap_diff=makecmap(erp_diff_limits);
+
+v=zeros(length(pp.plotn_g),length(pp.plotn_cond),length(pp.t_start_ms),2);
+for group=pp.chosen_g(pp.plotn_g)
+figure; subplot_dummy=0;
+overtitle=sprintf('Topography of ERPs / %s',scl.g_label{group});
+for cond=pp.plotn_cond
+    for win=1:length(pp.t_start_ms)
+    [~,t_start]=min(abs(scl.t_ms-pp.t_start_ms(win)));
+    [~,t_end]=min(abs(scl.t_ms-pp.t_end_ms(win)));
+    subplot_dummy=subplot_dummy+1;
+    sp(cond)=subplot(length(pp.plotn_cond),length(pp.t_start_ms),subplot_dummy);
+    if win~=pp.maxwin
+    if cond==imp.maxconds+1
+        erp_topo_data = mean(mean(mean(erpdata(t_start:t_end,:,pp.cond_diff{1},s_inds_g(:,group)),1),3),4) - ...
+    mean(mean(mean(erpdata(t_start:t_end,:,pp.cond_diff{2},s_inds_g(:,group)),1),3),4);
+        topoplot(erp_topo_data,chan_locs,'maplimits',[erp_diff_limits(1) erp_diff_limits(2)], ...
+            'electrodes','off','colormap',cmap_diff,'style','fill','numcontour',7);
+        freezeColors;
+    else
+        erp_topo_data=mean(mean(erpdata(t_start:t_end,:,cond,s_inds_g(:,group)),1),4);
+        topoplot(erp_topo_data,chan_locs,'maplimits',[erp_topo_scale(1) erp_topo_scale(2)], ...
+            'electrodes','off','colormap',cmap,'style','fill','numcontour',7);
+        freezeColors;
+    end
+    shading flat
+    else
+        set(gca,'Visible','Off');
+    end
+    %title(sprintf('%s, %d - %d ms, %s',scl.cond_label{cond},pp.t_start_ms(win),pp.t_end_ms(win),scl.g_label{group}))
+    v(group,cond,win,1)=min(erp_topo_data); v(group,cond,win,2)=max(erp_topo_data);
+    end
+    %color bar
+    cb_pos = get(gca,'Position') + [0.08 0 0 0];
+    cb_pos(3) = 0.05; %set width
+    if cond==imp.maxconds+1
+        cb_lim = erp_diff_limits;
+    else
+        cb_lim = erp_topo_scale;
+    end
+    colorscale([1 256], cb_lim, range(cb_lim)/5, 'vert', ...
+        'Position',cb_pos);
+    freezeColors;
+end
+adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,subplot_dims);
+tightfig;
+set_print_size(17,17/scl.phi);
+end
+c(1)=min(min(min(v(:,1:end-1,:,1)))); c(2)=max(max(max(v(:,1:end-1,:,2))));
+c_diff(1)=min(min(v(:,end,:,1))); c_diff(2)=max(max(v(:,end,:,2)));
+clear_plotassistvars
+
+%% plot topography of ERPs (HBNL TOPO VERSION)
+
+sp_rowlabel={scl.cond_label{pp.plotn_cond}};
+sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
+x_plotlabel=' ';
+y_plotlabel=' ';
+subplot_dims=[length(pp.plotn_cond),length(pp.t_start_ms)];
+
+erp_topo_scale=[-8 12];
+erp_diff_limits=[-4 3];
+v=zeros(length(pp.plotn_g),length(pp.plotn_cond),length(pp.t_start_ms),2);
 for group=pp.chosen_g(pp.plotn_g)
 figure; subplot_dummy=0;
 overtitle=sprintf('Topography of ERPs / %s',scl.g_label{group});
@@ -102,21 +179,29 @@ for cond=pp.plotn_cond
     if cond==imp.maxconds+1
         erp_topo_data = mean(mean(mean(erpdata(t_start:t_end,:,pp.cond_diff{1},s_inds_g(:,group)),1),3),4) - ...
     mean(mean(mean(erpdata(t_start:t_end,:,pp.cond_diff{2},s_inds_g(:,group)),1),3),4);
-        topoplot(erp_topo_data,chan_locs,'maplimits',[erp_diff_limits(1) erp_diff_limits(2)],'electrodes','off','colormap',pp.cmap);
+        topoplot_hbnl(erp_topo_data','',erp_diff_limits(1),erp_diff_limits(2),...
+            5, 2, 1, 0, pp.cmap, false);
     else
         erp_topo_data=mean(mean(erpdata(t_start:t_end,:,cond,s_inds_g(:,group)),1),4);
-        topoplot(erp_topo_data,chan_locs,'maplimits',[erp_topo_scale(1) erp_topo_scale(2)],'electrodes','off','colormap',pp.cmap);
+        topoplot_hbnl(erp_topo_data','',erp_topo_scale(1),erp_topo_scale(2),...
+            15, 2, 1, 0, pp.cmap, false);
     end
     %title(sprintf('%s, %d - %d ms, %s',scl.cond_label{cond},pp.t_start_ms(win),pp.t_end_ms(win),scl.g_label{group}))
+    v(group,cond,win,1)=min(erp_topo_data); v(group,cond,win,2)=max(erp_topo_data);
     end
     colorbar;
 end
 adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,subplot_dims);
 tightfig;
 end
+c(1)=min(min(min(v(:,1:end-1,:,1)))); c(2)=max(max(max(v(:,1:end-1,:,2))));
+c_diff(1)=min(min(v(:,end,:,1))); c_diff(2)=max(max(v(:,end,:,2)));
 clear_plotassistvars
 
 %% look at EROs in individual bands / superimpose groups
+
+ero_yax=[35 85];
+erodiff_yax=[-4 14];
 
 %h_line=zeros(length(pp.plotn_cond),length(pp.chosen_g));
 for chan=pp.chosen_chan(pp.plotn_chan)
@@ -142,9 +227,15 @@ for freq_range=pp.plotn_f
             h=shadedErrorBar(1:imp.maxtimepts,ero_plot_data,ero_plot_data_std, scl.g_color{group}); hold on;
             %h_line(cond,group)=h.mainLine;
         end
+        if cond==imp.maxconds+1
+            axis([1 scl.t_end erodiff_yax(1) erodiff_yax(2)]);
+        else
+            axis([1 scl.t_end ero_yax(1) ero_yax(2)]);
+        end
+        %axis tight
         vline(scl.t_zero,'k--'); hold off;
-        axis tight
         set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms)
+        grid on
         title([scl.chan_label{chan},'/',scl.cond_label{cond},'/',num2str(pp.f_start_hz(freq_range)),'-',num2str(pp.f_end_hz(freq_range)),' Hz'])
     end
 tightfig;
@@ -155,7 +246,7 @@ clear_plotassistvars
 
 %% look at EROS in individual bands / superimpose conditions
 
-ero_yax=[-20 80];
+ero_yax=[-10 85];
 
 cond_colors={'r','g','b','m','r--','g--','b--','m--','k--','c'};
 for chan=pp.chosen_chan(pp.plotn_chan)
@@ -196,12 +287,20 @@ clear_plotassistvars
 
 %% image ERO (ERSP) in time-freq at a chosen channel
 
+sp_rowlabel=[];
+%sp_columnlabel={scl.cond_label{pp.plotn_cond}};
+sp_columnlabel=[];
+x_plotlabel='Time (ms)';
+y_plotlabel='Frequency (Hz)';
+subplot_dims=sp_d;
+
 pp.figdum=pp.figdum_init;
 v=zeros(length(pp.chosen_g),length(pp.chosen_chan(pp.plotn_chan)),length(pp.plotn_cond),2);
 for group=pp.chosen_g(pp.plotn_g)
-for chan=pp.chosen_chan(pp.plotn_chan)
+for chan=[25] %pp.chosen_chan(pp.plotn_chan)
 pp.figdum=pp.figdum+1;
 figure(pp.figdum); subplot_dummy=0;
+overtitle{pp.figdum}=sprintf('%s / %s',scl.chan_label{chan},scl.g_label{group});
 for cond=pp.plotn_cond
     subplot_dummy=subplot_dummy+1;
     subplot(sp_d(1),sp_d(2),subplot_dummy)
@@ -218,16 +317,17 @@ for cond=pp.plotn_cond
         %    repmat(squeeze(mean(mean(wave_totdata(1:scl.t_zero,chan,:,cond,s_inds_g(:,group)),1),5)),1,imp.maxtimepts)';
     end
     contourf(fliplr(ero_plot_data)',pp.n_contour)
-    shading flat; colormap(pp.cmap);
+    shading flat; 
     %imagesc(ero_plot_data');
     axis([scl.t_start scl.t_end 1 imp.maxfreqs]);
     v(group,chan,cond,:) = caxis;
-    set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); xlabel('Time (ms)');
-    set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); ylabel('Frequency (Hz)');
+    set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); %xlabel('Time (ms)');
+    set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); %ylabel('Frequency (Hz)');
     grid on;
-    title(['ERO at ',scl.chan_label{chan},' : ',scl.g_label{group},' : ',scl.cond_label{cond}])
+    %title(['ERO at ',scl.chan_label{chan},' : ',scl.g_label{group},' : ',scl.cond_label{cond}])
     hold on; plot(ones(imp.maxfreqs,1)*scl.t_zero,linspace(1,imp.maxfreqs,imp.maxfreqs),'k--'); hold off;
 end
+adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,subplot_dims);
 end
 end
 %
@@ -237,18 +337,29 @@ for fig=pp.figdum_init+1:pp.figdum
 figure(fig)
 for splot=1:subplot_dummy
     if splot==subplot_dummy
-        subplot(sp_d(1),sp_d(2),splot); caxis([c_diff(1) c_diff(2)]);
+        subplot(sp_d(1),sp_d(2),splot); caxis([.9*c_diff(1) .9*c_diff(2)]);
+        %colormap(pp.cmap_diff);
+        cmap=makecmap(c_diff);
+        colormap(cmap);
     else
-        subplot(sp_d(1),sp_d(2),splot); caxis([c(1) c(2)]);
+        subplot(sp_d(1),sp_d(2),splot); caxis([.9*c(1) .9*c(2)]);
+        %colormap(pp.cmap);
+        cmap=makecmap(c);
+        colormap(cmap);
     end
     colorbar;
+    freezeColors; cbfreeze;
 end
+plottitle(overtitle{fig});
 tightfig;
+set_print_size(20,8);
 end
 %distFig('s','ext','transpose',true);
-clear_plotassistvars
+clear_plotassistvars;
 
 %% plot ERO as a topographic plot over the head
+
+warning off MATLAB:hg:patch:CannotUseFaceVertexCDataOfSize0
 
 sp_rowlabel={scl.cond_label{pp.plotn_cond}};
 sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
@@ -256,8 +367,81 @@ x_plotlabel=' ';
 y_plotlabel=' ';
 subplot_dims=[length(pp.plotn_cond),length(pp.t_start_ms)];
 
-ero_topo_scale=[0 15];
-ero_diff_limits=[-8 2];
+ero_topo_scale=[-30 4];
+ero_diff_limits=[-1.5 3];
+cmap=makecmap(ero_topo_scale);
+cmap_diff=makecmap(ero_diff_limits);
+
+v=zeros(length(pp.plotn_cond),length(pp.chosen_g),length(pp.f_start_hz(pp.plotn_f)),length(pp.t_start_ms),2);
+for group=pp.chosen_g(pp.plotn_g)
+for freq_range=5 %pp.plotn_f
+figure; subplot_dummy=0;
+overtitle=sprintf('Topography of EROs in %1.1f - %1.1f Hz / %s',pp.f_start_hz(freq_range),pp.f_end_hz(freq_range),scl.g_label{group});
+%convert scl.freqs to pts
+[~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
+[~,f_end]=min(abs(scl.freqs-pp.f_end_hz(freq_range)));
+for cond=pp.plotn_cond
+    for win=1:length(pp.t_start_ms)
+        %convert times to points
+        [~,t_start]=min(abs(scl.t_ms-pp.t_start_ms(win)));
+        [~,t_end]=min(abs(scl.t_ms-pp.t_end_ms(win)));
+        %plot
+        subplot_dummy=subplot_dummy+1;
+        subplot(length(pp.plotn_cond),length(pp.t_start_ms),subplot_dummy)
+        if win~=pp.maxwin
+        if cond==imp.maxconds+1
+            topo_data=squeeze(mean(mean(mean(mean(wave_totdata(t_start:t_end,pp.chosen_topochan,f_end:f_start,pp.cond_diff{1},s_inds_g(:,group)),1),3),4),5)) - ...
+                squeeze(mean(mean(mean(mean(wave_totdata(t_start:t_end,pp.chosen_topochan,f_end:f_start,pp.cond_diff{2},s_inds_g(:,group)),1),3),4),5));
+            topoplot(topo_data,chan_locs,'maplimits',[ero_diff_limits(1) ero_diff_limits(2)], ...
+                'electrodes','off','colormap',cmap_diff,'style','fill','numcontour',7);
+            freezeColors;
+        else
+            %topo_data=squeeze(mean(mean(mean(wave_totdata(t_start:t_end,pp.chosen_topochan,f_end:f_start,cond,s_inds_g(:,group)),1),3),5));
+            topo_data=squeeze(mean(mean(mean(wave_totdata(t_start:t_end,pp.chosen_topochan,f_end:f_start,cond,s_inds_g(:,group)),1),3),5)) -...
+                squeeze(mean(mean(mean(wave_totdata(1:scl.t_zero,pp.chosen_topochan,f_end:f_start,cond,s_inds_g(:,group)),1),3),5));
+            topoplot(topo_data,chan_locs,'maplimits',[ero_topo_scale(1) ero_topo_scale(2)], ...
+                'electrodes','off','colormap',cmap,'style','fill','numcontour',7);
+            freezeColors;
+        end
+        shading flat
+        else
+            set(gca,'Visible','Off');
+        end
+        v(cond,group,freq_range,win,1) = min(topo_data); v(cond,group,freq_range,win,2) = max(topo_data);
+        %title(sprintf('%s, %d - %d ms, %1.1f - %1.1f Hz, %s',scl.cond_label{cond},pp.t_start_ms(win),pp.t_end_ms(win),pp.f_start_hz(freq_range),pp.f_end_hz(freq_range),scl.g_label{group}))
+        
+    end
+    %color bar
+    cb_pos = get(gca,'Position') + [0.08 0 0 0];
+    cb_pos(3) = 0.05; %set width
+    if cond==imp.maxconds+1
+        cb_lim = ero_diff_limits;
+    else
+        cb_lim = ero_topo_scale;
+    end
+    colorscale([1 256], cb_lim, range(cb_lim)/5, 'vert', ...
+        'Position',cb_pos);
+    freezeColors;
+end
+adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,subplot_dims);
+tightfig;
+set_print_size(17,17/scl.phi);
+end
+end
+c(1)=min(min(min(min(v(1:end-1,:,:,:,1))))); c(2)=max(max(max(max(v(1:end-1,:,:,:,2)))));
+c_diff(1)=min(min(min(v(end,:,:,:,1)))); c_diff(2)=max(max(max(v(end,:,:,:,2))));
+clear_plotassistvars
+
+%% plot ERO as a topographic plot over the head (HBNL TOPOPLOT VERSION)
+
+sp_rowlabel={scl.cond_label{pp.plotn_cond}};
+sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
+x_plotlabel=' ';
+y_plotlabel=' ';
+subplot_dims=[length(pp.plotn_cond),length(pp.t_start_ms)];
+
+ero_topo_scale=[-2 18];
+ero_diff_limits=[-9 3];
 
 v=zeros(length(pp.plotn_cond),length(pp.chosen_g),length(pp.f_start_hz(pp.plotn_f)),length(pp.t_start_ms),2);
 for group=pp.chosen_g(pp.plotn_g)
@@ -297,6 +481,8 @@ end
 c(1)=min(min(min(min(v(1:end-1,:,:,:,1))))); c(2)=max(max(max(max(v(1:end-1,:,:,:,2)))));
 c_diff(1)=min(min(min(v(end,:,:,:,1)))); c_diff(2)=max(max(max(v(end,:,:,:,2))));
 clear_plotassistvars
+
+
 
 %% scatter ERO with RT measures
 
@@ -497,12 +683,22 @@ clear_plotassistvars
 
 %% image ITC in time-freq at a chosen channel
 
-pp.figdum=pp.figdum_init;
+sp_rowlabel={''};
+sp_columnlabel=scl.cond_label;
+sp_rowlabel=[];
+sp_columnlabel=[];
+x_plotlabel='Time (ms)';
+y_plotlabel='Frequency (Hz)';
+subplot_dims=sp_d;
+
+%pp.figdum=pp.figdum_init;
+pp.figdum_init=pp.figdum;
 v=zeros(length(pp.chosen_g),length(pp.chosen_chan(pp.plotn_chan)),length(pp.plotn_cond),2);
 for group=pp.chosen_g
-for chan=pp.chosen_chan(pp.plotn_chan)
+for chan=[7] %pp.chosen_chan(pp.plotn_chan)
 pp.figdum=pp.figdum+1;
 figure(pp.figdum); subplot_dummy=0;
+overtitle{pp.figdum}=sprintf('%s / %s',scl.chan_label{chan},scl.g_label{group});
 for cond=pp.plotn_cond
     subplot_dummy=subplot_dummy+1;
     subplot(sp_d(1),sp_d(2),subplot_dummy)
@@ -516,17 +712,18 @@ for cond=pp.plotn_cond
         %itc_plot_data=squeeze(mean(wavelet_tot(:,chan,:,cond,s_inds_g(:,group)),5));
     end
     contourf(fliplr(itc_plot_data)',pp.n_contour)
-    shading flat; colormap(pp.cmap)
+    shading flat; %colormap(pp.cmap)
     %imagesc(itc_plot_data');
     
     axis([scl.t_start scl.t_end 1 imp.maxfreqs]);
     v(group,chan,subplot_dummy,:) = caxis;
-    set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); xlabel('Time (ms)');
-    set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); ylabel('Frequency (Hz)');
+    set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); %xlabel('Time (ms)');
+    set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); %ylabel('Frequency (Hz)');
     grid on;
-    title(['ITC at ',scl.chan_label{chan},' : ',scl.g_label{group},' : ',scl.cond_label{cond}])
+    %title(['ITC at ',scl.chan_label{chan},' : ',scl.g_label{group},' : ',scl.cond_label{cond}])
     hold on; plot(ones(imp.maxfreqs,1)*scl.t_zero,linspace(1,imp.maxfreqs,imp.maxfreqs),'k--'); hold off;
 end
+adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,subplot_dims);
 end
 end
 c(1)=min(min(min(v(:,:,1:end-1,1)))); c(2)=max(max(max(v(:,:,1:end-1,2))));
@@ -535,18 +732,32 @@ for fig=pp.figdum_init+1:pp.figdum
 figure(fig)
 for splot=1:length(pp.plotn_cond);
     if splot==length(pp.plotn_cond)
-        subplot(sp_d(1),sp_d(2),splot); caxis([c_diff(1) c_diff(2)]);
+        subplot(sp_d(1),sp_d(2),splot); caxis([.9*c_diff(1) .9*c_diff(2)]);
+        cmap=makecmap(c_diff);        
+        colormap(cmap);
     else
-        subplot(sp_d(1),sp_d(2),splot); caxis([c(1) c(2)]);
+        subplot(sp_d(1),sp_d(2),splot); caxis([.9*c(1) .9*c(2)]);
+        %cmap=makecmap(c);
+        colormap(pp.cmap);
     end
     colorbar;
+    freezeColors;
+    cbfreeze;
 end
+plottitle(overtitle{fig});
 tightfig;
+set_print_size(20,8);
 end
 %distFig('s','ext','transpose',true);
 clear_plotassistvars
 
 %% image ITC in time-freq at a chosen channel, with ERP superimposed
+
+sp_rowlabel={''};
+sp_columnlabel=scl.cond_label;
+x_plotlabel='Time (ms)';
+y_plotlabel='Frequency (Hz)';
+subplot_dims=sp_d;
 
 pp.figdum_init=pp.figdum;
 v=zeros(length(pp.chosen_g),length(pp.chosen_chan(pp.plotn_chan)),length(pp.plotn_cond),2);
@@ -554,6 +765,7 @@ for group=pp.chosen_g
 for chan=pp.chosen_chan(pp.plotn_chan)
 pp.figdum=pp.figdum+1;
 figure(pp.figdum); subplot_dummy=0;
+overtitle{pp.figdum}=sprintf('%s / %s',scl.chan_label{chan},scl.g_label{group});
 for cond=pp.plotn_cond
     subplot_dummy=subplot_dummy+1;
     subplot(sp_d(1),sp_d(2),subplot_dummy)
@@ -577,12 +789,13 @@ for cond=pp.plotn_cond
     plot(erp_plot_data+8,'w');
     axis([scl.t_start scl.t_end 1 imp.maxfreqs]);
     v(group,chan,subplot_dummy,:) = caxis;
-    set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); xlabel('Time (ms)');
-    set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); ylabel('Frequency (Hz)');
+    set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); %xlabel('Time (ms)');
+    set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); %ylabel('Frequency (Hz)');
     grid on;
-    title(['ITC at ',scl.chan_label{chan},' : ',scl.g_label{group},' : ',scl.cond_label{cond}])
+    %title(['ITC at ',scl.chan_label{chan},' : ',scl.g_label{group},' : ',scl.cond_label{cond}])
     hold on; plot(ones(imp.maxfreqs,1)*scl.t_zero,linspace(1,imp.maxfreqs,imp.maxfreqs),'k--');
 end
+adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,subplot_dims);
 end
 end
 c(1)=min(min(min(v(:,:,1:end-1,1)))); c(2)=max(max(max(v(:,:,1:end-1,2))));
@@ -591,18 +804,22 @@ for fig=pp.figdum_init+1:pp.figdum
 figure(fig)
 for splot=1:length(pp.plotn_cond);
     if splot==length(pp.plotn_cond)
-        subplot(sp_d(1),sp_d(2),splot); caxis([c_diff(1) c_diff(2)]);
-    elseif splot==sp_d(2)
-        subplot(sp_d(1),sp_d(2),splot); caxis([c(1) c(2)]);
+        subplot(sp_d(1),sp_d(2),splot); caxis([.9*c_diff(1) .9*c_diff(2)]);
+    else
+        subplot(sp_d(1),sp_d(2),splot); caxis([.9*c(1) .9*c(2)]);
     end
     colorbar;
 end
+plottitle(overtitle{fig});
 tightfig;
+set_print_size(20,8);
 end
 %distFig('s','ext','transpose',true);
 clear_plotassistvars
 
 %% image ITC as a scalp plot in a series of time-frequency windows
+
+warning off MATLAB:hg:patch:CannotUseFaceVertexCDataOfSize0
 
 sp_rowlabel={scl.cond_label{pp.plotn_cond}};
 sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
@@ -611,12 +828,12 @@ y_plotlabel=' ';
 subplot_dims=[length(pp.plotn_cond),length(pp.t_start_ms)];
 
 itc_topo_scale=[0.1 0.5];
-itc_diff_limits=[-.1 .1];
+itc_diff_limits=[-.08 .08];
 
 %
 v=zeros(length(pp.plotn_cond),length(pp.chosen_g),length(pp.f_start_hz(pp.plotn_f)),length(pp.t_start_ms),2);
 for group=pp.chosen_g(pp.plotn_g)
-for freq_range=pp.plotn_f
+for freq_range=5 %pp.plotn_f
 figure; subplot_dummy=0;
 overtitle=sprintf('ITC in %1.1f - %1.1f Hz / %s',pp.f_start_hz(freq_range),pp.f_end_hz(freq_range),scl.g_label{group});
 %convert scl.freqs to pts
@@ -630,28 +847,43 @@ for cond=pp.plotn_cond
         %plot
         subplot_dummy=subplot_dummy+1;
         subplot(length(pp.plotn_cond),length(pp.t_start_ms),subplot_dummy)
+        if win~=pp.maxwin
         if cond==imp.maxconds+1
             topo_data=squeeze(mean(mean(mean(mean(itcdata(t_start:t_end,pp.chosen_topochan,f_end:f_start,pp.cond_diff{1},s_inds_g(:,group)),1),3),4),5)) - ...
                 squeeze(mean(mean(mean(mean(itcdata(t_start:t_end,pp.chosen_topochan,f_end:f_start,pp.cond_diff{2},s_inds_g(:,group)),1),3),4),5));
-            topoplot(topo_data,chan_locs,'maplimits',[itc_diff_limits(1) itc_diff_limits(2)],'electrodes','off','colormap',pp.cmap);
+            topoplot(topo_data,chan_locs,'maplimits',[itc_diff_limits(1) itc_diff_limits(2)],...
+                'electrodes','off','colormap',pp.cmap,'style','fill','numcontour',7);
         else
             topo_data=squeeze(mean(mean(mean(itcdata(t_start:t_end,pp.chosen_topochan,f_end:f_start,cond,s_inds_g(:,group)),1),3),5));
-            topoplot(topo_data,chan_locs,'maplimits',[itc_topo_scale(1) itc_topo_scale(2)],'electrodes','off','colormap',pp.cmap);
+            topoplot(topo_data,chan_locs,'maplimits',[itc_topo_scale(1) itc_topo_scale(2)],...
+                'electrodes','off','colormap',pp.cmap,'style','fill','numcontour',7);
+        end
+        shading flat
+        else
+            set(gca,'Visible','Off');
         end
         v(cond,group,freq_range,win,1) = min(topo_data); v(cond,group,freq_range,win,2) = max(topo_data);
         %title(sprintf('%s, %d - %d ms, %1.1f - %1.1f Hz, %s',scl.cond_label{cond},pp.t_start_ms(win),pp.t_end_ms(win),pp.f_start_hz(freq_range),pp.f_end_hz(freq_range),scl.g_label{group}))
     end
-    colorbar;
+    %color bar
+    cb_pos = get(gca,'Position') + [0.08 0 0 0];
+    cb_pos(3) = 0.05; %set width
+    if cond==imp.maxconds+1
+        cb_lim = itc_diff_limits;
+    else
+        cb_lim = itc_topo_scale;
+    end
+    colorscale([1 256], cb_lim, range(cb_lim)/5, 'vert', ...
+        'Position',cb_pos);
 end
 adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,subplot_dims);
-%tightfig;
-%dragzoom;
+%fig(pp.figdum, 'units', 'centimeters', 'width', 17, 'height', length(pp.plotn_cond)*3, ...
+%    'font', 'Monospaced', 'fontsize', 11);
+set_print_size(17,17/scl.phi);
 end
 end
 c(1)=min(min(min(min(v(1:end-1,:,:,:,1))))); c(2)=max(max(max(max(v(1:end-1,:,:,:,2)))));
 c_diff(1)=min(min(min(v(end,:,:,:,1)))); c_diff(2)=max(max(max(v(end,:,:,:,2))));
-%c(2)=itc_topo_scale;%c(2) override
-%for splot=1:subplot_dummy; subplot(imp.maxconds,length(pp.t_start_ms),splot); caxis([c(1) c(2)]); end
 clear_plotassistvars
 
 %% ITC - create condition bar plots with error bars
@@ -664,7 +896,7 @@ subplot_dims=[length(pp.f_start_hz(pp.plotn_f)),length(pp.t_start_ms)];
 
 width=[];
 bw_xlabel=[];
-bw_ylabel='ITC';
+bw_ylabel=[];
 bw_colormap=bone; %pmkmp(length(barvalues),'cubicl');
 gridstatus='y';
 error_sides=1;
@@ -703,7 +935,7 @@ for freq_range=pp.plotn_f
         bar_h=barweb(bar_data(pp.chosen_g,:),bar_data_se(pp.chosen_g,:),width,bar_glabel,...
             bar_title,bw_xlabel,bw_ylabel,bw_colormap,gridstatus,bar_condlabel,error_sides,legend_type);
         axis 'auto y'
-        axis([0 4 0.2 0.6])
+        axis([0 4 0.15 0.6])
         [p,ranova_table]=anova_rm(ranova_data,'off');
         text(2.5,0.32,sprintf('main p=%1.3f',p(1)))
         text(2.5,0.25,sprintf('group p=%1.3f',p(2)))
@@ -714,6 +946,173 @@ adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,subplot
 end
 %linkaxes
 tightfig;
+clear_plotassistvars
+
+%% plot per-subject lines of the shape of results for a certain measure across conditions (ERO)
+
+chosen_chan=7;
+win_t=[200 400];
+%win_t=[300 500];
+win_f=[4 5.3];
+
+[~,t_s]=min(abs(scl.t_ms-win_t(1))); [~,t_e]=min(abs(scl.t_ms-win_t(2)));
+[~,f_s]=min(abs(scl.freqs-win_f(1))); [~,f_e]=min(abs(scl.freqs-win_f(2)));
+
+figure; gdum=0;
+overtitle=sprintf('ERO at %s in %1.1f - %1.1f Hz from %d - %d ms',...
+    scl.chan_label{chosen_chan},win_f(1),win_f(2),win_t(1),win_t(2));
+for group=pp.chosen_g
+    conddiff_dir=zeros(imp.maxconds,1);
+    gdum=gdum+1;
+    subplot(1,2,gdum)
+    linedata=meanx(wave_totdata(t_s:t_e,chosen_chan,f_e:f_s,:,s_inds_g(:,group)),[4 5]); %ERO
+    %linedata=meanx(wave_totdata(t_s:t_e,chosen_chan,f_e:f_s,:,s_inds_g(:,group)),[4 5]) - ...
+    %    meanx(wave_totdata(1:scl.t_zero,chosen_chan,f_e:f_s,:,s_inds_g(:,group)),[4 5]); %ERSP
+    ranova_data{gdum}=linedata';
+    for s=1:size(linedata,2)
+    if linedata(pp.cond_diff{1},s) > linedata(pp.cond_diff{2},s)
+        mark='b-o'; conddiff_dir(1)=conddiff_dir(1)+1;
+    else
+        mark='m--*'; conddiff_dir(2)=conddiff_dir(2)+1;
+    end
+    plot(linedata(:,s),mark); hold on; axis([0 imp.maxconds+1 10 139]);
+    end
+    conddiff_text=sprintf(['%s > %s : %d/%d (%2.0f%%), M=%2.1f',char(177),'%1.1f'],...
+        scl.cond_label{pp.cond_diff{1}},scl.cond_label{pp.cond_diff{2}},...
+        conddiff_dir(1),sum(s_inds_g(:,group)),...
+        conddiff_dir(1)/sum(s_inds_g(:,group))*100,...
+        abs(diff(mean(linedata(:,linedata(pp.cond_diff{1},:)>...
+        linedata(pp.cond_diff{2},:)),2))),...
+        abs(diff(std(linedata(:,linedata(pp.cond_diff{1},:)>...
+        linedata(pp.cond_diff{2},:)),0,2))));
+    text(0.5,120,conddiff_text)
+    set(gca,'XTick',[1:imp.maxconds],'XTickLabel',scl.cond_label);
+    xlabel('Condition');
+    ylabel('ERO');
+    title(scl.g_label{group});    
+end
+[p,ranova_table]=anova_rm(ranova_data,'off');
+plottitle(overtitle);
+clear_plotassistvars
+
+%% plot per-subject lines of the shape of results for a certain measure across conditions (ITC)
+
+chosen_chan=7;
+win_t=[200 400];
+win_f=[4 5.3];
+
+[~,t_s]=min(abs(scl.t_ms-win_t(1))); [~,t_e]=min(abs(scl.t_ms-win_t(2)));
+[~,f_s]=min(abs(scl.freqs-win_f(1))); [~,f_e]=min(abs(scl.freqs-win_f(2)));
+
+figure; gdum=0;
+overtitle=sprintf('ITC at %s in %1.1f - %1.1f Hz from %d - %d ms',...
+    scl.chan_label{chosen_chan},win_f(1),win_f(2),win_t(1),win_t(2));
+for group=pp.chosen_g
+    conddiff_dir=zeros(imp.maxconds,1);
+    gdum=gdum+1;
+    subplot(1,2,gdum)
+    linedata=meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,:,s_inds_g(:,group)),[4 5]);
+    %linedata=meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,:,s_inds_g(:,group)),[4 5]) - ...
+    %    meanx(itcdata(1:scl.t_start,chosen_chan,f_e:f_s,:,s_inds_g(:,group)),[4 5]);
+    ranova_data{gdum}=linedata';
+    for s=1:size(linedata,2)
+    if linedata(pp.cond_diff{1},s) > linedata(pp.cond_diff{2},s)
+        mark='b-o'; conddiff_dir(1)=conddiff_dir(1)+1;
+    else
+        mark='m--*'; conddiff_dir(2)=conddiff_dir(2)+1;
+    end
+    plot(linedata(:,s),mark); hold on; axis([0 imp.maxconds+1 0 1]);
+    end
+    conddiff_text=sprintf(['%s > %s : %d/%d (%2.0f%%), M=%0.2f',char(177),'%0.2f'],...
+        scl.cond_label{pp.cond_diff{1}},scl.cond_label{pp.cond_diff{2}},...
+        conddiff_dir(1),sum(s_inds_g(:,group)),...
+        conddiff_dir(1)/sum(s_inds_g(:,group))*100,...
+        abs(diff(mean(linedata(:,linedata(pp.cond_diff{1},:)>...
+        linedata(pp.cond_diff{2},:)),2))),...
+        abs(diff(std(linedata(:,linedata(pp.cond_diff{1},:)>...
+        linedata(pp.cond_diff{2},:)),0,2))));
+    text(0.5,0.8,conddiff_text)
+    set(gca,'XTick',[1:imp.maxconds],'XTickLabel',scl.cond_label);
+    xlabel('Condition');
+    ylabel('ITC');
+    title(scl.g_label{group});    
+end
+[p,ranova_table]=anova_rm(ranova_data,'off');
+plottitle(overtitle);
+clear_plotassistvars
+
+%% scatter per-subject condition difference with behavioral criteria
+
+chosen_chan=7;
+win_t=[200 400];
+win_f=[4.6 6.4];
+
+[~,t_s]=min(abs(scl.t_ms-win_t(1))); [~,t_e]=min(abs(scl.t_ms-win_t(2)));
+[~,f_s]=min(abs(scl.freqs-win_f(1))); [~,f_e]=min(abs(scl.freqs-win_f(2)));
+
+for po=1:5
+
+figure;
+overtitle=sprintf('ITC at %s in %1.1f - %1.1f Hz from %d - %d ms',...
+    scl.chan_label{chosen_chan},win_f(1),win_f(2),win_t(1),win_t(2));
+
+%xdata=behdata.crit(s_inds_g(:,scl.g_all));
+%xdata=behdata.avgbet(s_inds_g(:,scl.g_all));
+xdata=behdata.avgbet_po(po,s_inds_g(:,scl.g_all));
+%xdata=behdata.stdbet_po(po,s_inds_g(:,scl.g_all));
+%xdata=behdata.avgbet_po2(po,s_inds_g(:,scl.g_all));
+%ydata=meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,pp.cond_diff{1},s_inds_g(:,scl.g_all)),5) - ...
+%    meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,pp.cond_diff{2},s_inds_g(:,scl.g_all)),5);
+ydata=meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,pp.cond_diff{1},s_inds_g(:,scl.g_all)),5);
+
+scatter(xdata,ydata)
+
+%set(gca,'XTick',[1:imp.maxconds],'XTickLabel',scl.cond_label);
+xlabel('Criterion');
+ylabel('ITC');
+%title(scl.g_label{group});    
+
+plottitle(overtitle);
+end
+clear_plotassistvars
+
+%% scatter per-subject ERO with behavioral criteria
+
+chosen_chan=7;
+win_t=[250 500];
+win_f=[4.6 6.4];
+
+[~,t_s]=min(abs(scl.t_ms-win_t(1))); [~,t_e]=min(abs(scl.t_ms-win_t(2)));
+[~,f_s]=min(abs(scl.freqs-win_f(1))); [~,f_e]=min(abs(scl.freqs-win_f(2)));
+
+for po=1:4
+
+figure;
+overtitle=sprintf('ITC at %s in %1.1f - %1.1f Hz from %d - %d ms',...
+    scl.chan_label{chosen_chan},win_f(1),win_f(2),win_t(1),win_t(2));
+
+for group=pp.chosen_g
+
+%xdata=behdata.crit(s_inds_g(:,scl.g_all));
+%xdata=behdata.avgbet(s_inds_g(:,scl.g_all));
+xdata=behdata.crit_po(po,s_inds_g(:,group));
+%xdata=behdata.avgbet_po(po,s_inds_g(:,scl.g_all));
+%data=behdata.avgbet_po2(po,s_inds_g(:,scl.g_all));
+ydata=meanx(wave_totdata(t_s:t_e,chosen_chan,f_e:f_s,pp.cond_diff{1},s_inds_g(:,group)),5) - ...
+    meanx(wave_totdata(t_s:t_e,chosen_chan,f_e:f_s,pp.cond_diff{2},s_inds_g(:,group)),5);
+%ydata=meanx(wave_totdata(t_s:t_e,chosen_chan,f_e:f_s,pp.cond_diff{1},s_inds_g(:,group)),5);
+
+scatter(xdata,ydata,scl.g_color{group}); hold on;
+
+end
+
+%set(gca,'XTick',[1:imp.maxconds],'XTickLabel',scl.cond_label);
+xlabel('Criterion');
+ylabel('ERO');
+%title(scl.g_label{group});    
+
+plottitle(overtitle);
+end
 clear_plotassistvars
 
 %% scatter ITC with RT measures
@@ -836,10 +1235,11 @@ sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
 x_plotlabel='Age (yrs)';
 y_plotlabel='ERO Power';
 
-ero_axes=[min(s_demogs.age_eeg) max(s_demogs.age_eeg) 40 90];
-ero_axes_diff=[min(s_demogs.age_eeg) max(s_demogs.age_eeg) -10 10];
+ero_axes=[min(s_demogs.age_eeg) max(s_demogs.age_eeg) 10 100];
+ero_axes_diff=[min(s_demogs.age_eeg) max(s_demogs.age_eeg) -30 20];
 
-p_tfwin=zeros(2,length(pp.chosen_chan(pp.plotn_chan)),length(pp.f_start_hz(pp.plotn_f)),pp.maxwin);
+p_tfwin=zeros(2,length(pp.chosen_chan(pp.plotn_chan)),length(pp.f_start_hz(pp.plotn_f)), ...
+    length(pp.plotn_cond),pp.maxwin,length(pp.plotn_g));
 for chan=pp.chosen_chan(pp.plotn_chan)
 for freq_range=pp.plotn_f
     [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
@@ -868,13 +1268,13 @@ for freq_range=pp.plotn_f
         axis(ero_axes);
     end
 
-    %p_tfwin(:,chan,freq_range,win)=robustfit(itc_scatterdata_x,itc_scatterdata_y);
+    p_tfwin(:,chan,freq_range,cond,win,group)=robustfit(ero_scatterdata_x,ero_scatterdata_y);
     %
     scatter_h(group)=scatter(ero_scatterdata_x,ero_scatterdata_y, scl.g_color{group}); hold on;
     %
     %plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100),'k--'); hold on;
-    %plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100)*...
-    %    p_tfwin(2,chan,freq_range,win)+p_tfwin(1,chan,freq_range,win), scl.g_color{group}); hold on;
+    plot(linspace(ero_axes(1),ero_axes(2),100),linspace(ero_axes(3),ero_axes(4),100)*...
+        p_tfwin(2,chan,freq_range,cond,win,group)+p_tfwin(1,chan,freq_range,cond,win,group), scl.g_color{group}); hold on;
     end
     hold off; grid on;
     end
@@ -893,10 +1293,11 @@ sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
 x_plotlabel='Age (yrs)';
 y_plotlabel='ITC';
 
-itc_axes=[min(s_demogs.age_eeg) max(s_demogs.age_eeg) 0 0.8];
+itc_axes=[min(s_demogs.age_eeg) max(s_demogs.age_eeg) 0 1];
 itc_axes_diff=[min(s_demogs.age_eeg) max(s_demogs.age_eeg) -0.5 0.5];
 
-p_tfwin=zeros(2,length(pp.chosen_chan(pp.plotn_chan)),length(pp.f_start_hz(pp.plotn_f)),pp.maxwin);
+p_tfwin=zeros(2,length(pp.chosen_chan(pp.plotn_chan)),length(pp.f_start_hz(pp.plotn_f)), ...
+    length(pp.plotn_cond),pp.maxwin,length(pp.plotn_g));
 for chan=pp.chosen_chan(pp.plotn_chan)
 for freq_range=pp.plotn_f
     [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
@@ -925,13 +1326,14 @@ for freq_range=pp.plotn_f
         axis(itc_axes);
     end
 
-    %p_tfwin(:,chan,freq_range,win)=robustfit(itc_scatterdata_x,itc_scatterdata_y);
+    %p_tfwin(:,chan,freq_range,cond,win,group)=robustfit(itc_scatterdata_x,itc_scatterdata_y);
+    p_tfwin(:,chan,freq_range,cond,win,group)=polyfit(itc_scatterdata_x,itc_scatterdata_y,1);
     %
     scatter_h(group)=scatter(itc_scatterdata_x,itc_scatterdata_y, scl.g_color{group}); hold on;
     %
     %plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100),'k--'); hold on;
-    %plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100)*...
-    %    p_tfwin(2,chan,freq_range,win)+p_tfwin(1,chan,freq_range,win), scl.g_color{group}); hold on;
+    plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100)*...
+        p_tfwin(1,chan,freq_range,cond,win,group)+p_tfwin(2,chan,freq_range,cond,win,group), scl.g_color{group}); hold on;
     end
     hold off;  grid on;
     end

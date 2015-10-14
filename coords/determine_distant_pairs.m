@@ -48,9 +48,11 @@ if isscalar(coords_filepath)
 elseif ischar(coords_filepath)
     %if a string, load that location file
     load(coords_filepath)
+elseif isstruct(coords_filepath)
+    %if a structure, set that as the chan_locs
+    chan_locs=coords_filepath;
 else
     error('Channel locations incorrectly specified.')
-    return
 end
 
 n_channels=length(chan_locs);
@@ -63,7 +65,6 @@ if exclude_logic
         exclude_channels=[1 2 3 4 14 15 26 27 30 31 32 33 36 37 38 46 45 54 55 58];
     else
         error('Channel locations file specified has unexpected # of electrodes.')
-        return
     end
 else
     exclude_channels=[];
@@ -136,12 +137,8 @@ if edges_per_chan > 0
 %connections across channels
 unique_chans=unique(pair_subset)';
 degree=zeros(n_channels,1);
-%n_uniqchans=length(unique_chans);
-%degrees=zeros(n_channels,1);
-%for chan=unique_chans
-%    degrees(chan)=sum(sum(pair_subset==chan));
-%end
-%min_degs
+%this algorithm removes pairs until the degree is reduced to a certain
+%number
 for chan=unique_chans
 pair=0;
 while pair<=length(pair_subset)-1
@@ -184,7 +181,7 @@ for chosen_pair=n_chosen_pairs
             direction=mod(mod(chosen_pair,3),2);
     end
     %plot the arc
-    arc_h(chosen_pair-30)=Draw_Arc_Clockwise([x(1),y(1)], [x(2),y(2)], distant_pair_colors(chosen_pair,:), 3, direction); hold on;
+    arc_h(chosen_pair)=Draw_Arc_Clockwise([x(1),y(1)], [x(2),y(2)], distant_pair_colors(chosen_pair,:), 3, direction); hold on;
 end
 
 %make labels
