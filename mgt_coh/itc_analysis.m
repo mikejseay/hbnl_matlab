@@ -5,14 +5,19 @@ for cond=pp.plotn_cond
     subplot_dummy=subplot_dummy+1;
     sp(subplot_dummy)=subplot(sp_d(1),sp_d(2),subplot_dummy);
     for group=pp.chosen_g
+        if cond==imp.maxconds+1
+        scatter(peakmat(s_inds_g(:,group),pp.cond_diff{1},2) - peakmat(s_inds_g(:,group),pp.cond_diff{2},2),...
+            peakmat(s_inds_g(:,group),pp.cond_diff{1},1) - peakmat(s_inds_g(:,group),pp.cond_diff{2},1),scl.g_color{group}); hold on;
+        else
         scatter(peakmat(s_inds_g(:,group),cond,2),...
             peakmat(s_inds_g(:,group),cond,1),scl.g_color{group}); hold on;
+        end
     end
     hold off; set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms);
     axis tight; title(sprintf('%s',scl.cond_label{cond}));
     xlabel('Peak Latency (ms)'); ylabel('Peak Amplitude (uV)');
 end
-linkaxes(sp)
+%linkaxes(sp)
 clear_plotassistvars
 
 %% plot ERPS with groups superimposed
@@ -101,8 +106,8 @@ x_plotlabel=' ';
 y_plotlabel=' ';
 subplot_dims=[length(pp.plotn_cond),length(pp.t_start_ms)];
 
-erp_topo_scale=[-8 13];
-erp_diff_limits=[-5 3];
+erp_topo_scale=[-16 22];
+erp_diff_limits=[-9 6];
 cmap=makecmap(erp_topo_scale);
 cmap_diff=makecmap(erp_diff_limits);
 
@@ -137,7 +142,7 @@ for cond=pp.plotn_cond
     v(group,cond,win,1)=min(erp_topo_data); v(group,cond,win,2)=max(erp_topo_data);
     end
     %color bar
-    cb_pos = get(gca,'Position') + [0.08 0 0 0];
+    cb_pos = get(gca,'Position') + [0.04 0 0 0];
     cb_pos(3) = 0.05; %set width
     if cond==imp.maxconds+1
         cb_lim = erp_diff_limits;
@@ -297,7 +302,7 @@ subplot_dims=sp_d;
 pp.figdum=pp.figdum_init;
 v=zeros(length(pp.chosen_g),length(pp.chosen_chan(pp.plotn_chan)),length(pp.plotn_cond),2);
 for group=pp.chosen_g(pp.plotn_g)
-for chan=[25] %pp.chosen_chan(pp.plotn_chan)
+for chan=[7] % 16 25 57 58] %pp.chosen_chan(pp.plotn_chan)
 pp.figdum=pp.figdum+1;
 figure(pp.figdum); subplot_dummy=0;
 overtitle{pp.figdum}=sprintf('%s / %s',scl.chan_label{chan},scl.g_label{group});
@@ -367,8 +372,8 @@ x_plotlabel=' ';
 y_plotlabel=' ';
 subplot_dims=[length(pp.plotn_cond),length(pp.t_start_ms)];
 
-ero_topo_scale=[-30 4];
-ero_diff_limits=[-1.5 3];
+ero_topo_scale=[-25 8];
+ero_diff_limits=[-0.9 2.5];
 cmap=makecmap(ero_topo_scale);
 cmap_diff=makecmap(ero_diff_limits);
 
@@ -484,25 +489,28 @@ clear_plotassistvars
 
 
 
-%% scatter ERO with RT measures
+%% scatter ERO with behavioral measures
+
+for po=1:4
 
 sp_rowlabel={scl.cond_label{pp.plotn_cond}};
 sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
-x_plotlabel='RT Variance (ms)'; %Median, variance, std also interesting
+x_plotlabel=['Average Bet Following ',behdata.cond1{po}];
 y_plotlabel='ERO Power';
 
-behav_data=varRT;
+behav_data=behdata.avgbet_po(po,:); %avgbet; %
 
-ero_axes=[min(min(behav_data)) 60000 -20 20]; %max(max(behav_data))
-ero_axes_diff=[min(min(behav_data)) max(max(behav_data)) -2 5];
+ero_axes=[min(min(behav_data)) max(max(behav_data)) -10 30]; %max(max(behav_data))
+ero_axes_diff=[min(min(behav_data)) max(max(behav_data)) -20 20];
 
 p_tfwin=zeros(2,length(pp.chosen_chan(pp.plotn_chan)),length(pp.f_start_hz(pp.plotn_f)),pp.maxwin);
+v=zeros(length(pp.plotn_chan),length(pp.plotn_f),length(pp.plotn_cond),pp.maxwin,2);
 for chan=pp.chosen_chan(pp.plotn_chan)
-for freq_range=pp.plotn_f
+for freq_range=5 %pp.plotn_f(6)
     [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
     [~,f_end]=min(abs(scl.freqs-pp.f_end_hz(freq_range)));
     figure; subplot_dummy=0;
-    overtitle=sprintf('ERO Power over age at %s in %1.1f - %1.1f Hz', ...
+    overtitle=sprintf('ERO Power at %s in %1.1f - %1.1f Hz vs. Behavior', ...
         scl.chan_label{chan},pp.f_start_hz(freq_range),pp.f_end_hz(freq_range));
     for cond=pp.plotn_cond
     for win=1:pp.maxwin
@@ -513,38 +521,136 @@ for freq_range=pp.plotn_f
     %    
     for group=pp.chosen_g(pp.plotn_g)
         
-    ero_scatterdata_x=behav_data(s_inds_g(:,group),cond);
+    ero_scatterdata_x=behav_data(s_inds_g(:,group));
     
     if cond==imp.maxconds+1
         ero_scatterdata_y=squeeze(mean(mean(mean(wave_totdata(...
             t_start:t_end,chan,f_end:f_start,pp.cond_diff{1},s_inds_g(:,group)),1),3),4)) -...
             squeeze(mean(mean(mean(wave_totdata(...
             t_start:t_end,chan,f_end:f_start,pp.cond_diff{2},s_inds_g(:,group)),1),3),4));
+        [p_tfwin(:,chan,freq_range,win) stats]=robustfit(ero_scatterdata_x,ero_scatterdata_y);
+        %[p_tfwin(:,chan,freq_range,win),~,~,~,stats]=regress(ero_scatterdata_y,[ones(length(ero_scatterdata_x),1) ero_scatterdata_x]);
+        scatter_h(group)=scatter(ero_scatterdata_x,ero_scatterdata_y, scl.g_color{group}); hold on;
+        %plot(linspace(ero_axes_diff(1),ero_axes_diff(2),100),linspace(ero_axes_diff(3),ero_axes_diff(4),100),'k--'); hold on;
+        plot(linspace(ero_axes_diff(1),ero_axes_diff(2),100),linspace(ero_axes_diff(1),ero_axes_diff(2),100)*...
+            p_tfwin(2,chan,freq_range,win)+p_tfwin(1,chan,freq_range,win), scl.g_color{group}); hold on;
+        if stats.p(2) < .05
+            text((ero_axes_diff(1)+ero_axes_diff(2))/2,(ero_axes_diff(4))*(group/12),['s=',num2str(stats.s,3)],'Color',scl.g_color{group});
+        end
         axis(ero_axes_diff);
     else
         ero_scatterdata_y=squeeze(mean(mean(mean(wave_totdata(...
             t_start:t_end,chan,f_end:f_start,cond,s_inds_g(:,group)),1),3),4)) - ...
             squeeze(mean(mean(mean(wave_totdata(...
             1:scl.t_zero,chan,f_end:f_start,cond,s_inds_g(:,group)),1),3),4));
+        [p_tfwin(:,chan,freq_range,win) stats]=robustfit(ero_scatterdata_x,ero_scatterdata_y);
+        %[p_tfwin(:,chan,freq_range,win),~,~,~,stats]=regress(ero_scatterdata_y,[ones(length(ero_scatterdata_x),1) ero_scatterdata_x]);
+        scatter_h(group)=scatter(ero_scatterdata_x,ero_scatterdata_y, scl.g_color{group}); hold on;
+        %plot(linspace(ero_axes(1),ero_axes(2),100),linspace(ero_axes(3),ero_axes(4),100),'k--'); hold on;
+        plot(linspace(ero_axes(1),ero_axes(2),100),linspace(ero_axes(1),ero_axes(2),100)*...
+            p_tfwin(2,chan,freq_range,win)+p_tfwin(1,chan,freq_range,win), scl.g_color{group}); hold on;
+        if stats.p(2) < .05
+        text((ero_axes(1)+ero_axes(2))/2,(ero_axes(4))*(group/12),['s=',num2str(stats.s,3)],'Color',scl.g_color{group});
+        end
         axis(ero_axes);
     end
-
-    %p_tfwin(:,chan,freq_range,win)=robustfit(itc_scatterdata_x,itc_scatterdata_y);
-    %
-    scatter_h(group)=scatter(ero_scatterdata_x,ero_scatterdata_y, scl.g_color{group}); hold on;
-    %
-    %plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100),'k--'); hold on;
-    %plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100)*...
-    %    p_tfwin(2,chan,freq_range,win)+p_tfwin(1,chan,freq_range,win), scl.g_color{group}); hold on;
+    v(chan,freq_range,cond,win,1) = min(ero_scatterdata_y); v(chan,freq_range,cond,win,2) = max(ero_scatterdata_y);
     end
     hold off; grid on;
     end
     end
 adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle);
-tightfig; dragzoom;
+tightfig; %dragzoom;
 end
 end
+c(1)=min(min(min(min(v(:,:,1:end-1,:,1))))); c(2)=max(max(max(max(v(:,:,1:end-1,:,2)))));
+c_diff(1)=min(min(min(v(:,:,end,:,1)))); c_diff(2)=max(max(max(v(:,:,end,:,2))));
+
+end
+
 clear_plotassistvars
+
+%% scatter ITC with behavioral measures
+
+for po=1:4
+
+sp_rowlabel={scl.cond_label{pp.plotn_cond}};
+sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
+x_plotlabel=['Average Bet Following ',behdata.cond1{po}];
+y_plotlabel='ITC';
+
+behav_data=behdata.avgbet_po(po,:); %avgbet; %
+
+ero_axes=[min(min(behav_data)) max(max(behav_data)) 0 1]; %max(max(behav_data))
+ero_axes_diff=[min(min(behav_data)) max(max(behav_data)) -.5 .5];
+
+p_tfwin=zeros(2,length(pp.chosen_chan(pp.plotn_chan)),length(pp.f_start_hz(pp.plotn_f)),pp.maxwin);
+v=zeros(length(pp.plotn_chan),length(pp.plotn_f),length(pp.plotn_cond),pp.maxwin,2);
+for chan=pp.chosen_chan(pp.plotn_chan)
+for freq_range=5 %pp.plotn_f(6)
+    [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
+    [~,f_end]=min(abs(scl.freqs-pp.f_end_hz(freq_range)));
+    figure; subplot_dummy=0;
+    overtitle=sprintf('ITC at %s in %1.1f - %1.1f Hz vs. Behavior', ...
+        scl.chan_label{chan},pp.f_start_hz(freq_range),pp.f_end_hz(freq_range));
+    for cond=pp.plotn_cond
+    for win=1:pp.maxwin
+    [~,t_start]=min(abs(scl.t_ms-pp.t_start_ms(win)));
+    [~,t_end]=min(abs(scl.t_ms-pp.t_end_ms(win)));
+    subplot_dummy=subplot_dummy+1;
+    subplot(length(pp.plotn_cond),pp.maxwin,subplot_dummy);
+    %    
+    for group=pp.chosen_g(pp.plotn_g)
+        
+    ero_scatterdata_x=behav_data(s_inds_g(:,group));
+    
+    if cond==imp.maxconds+1
+        ero_scatterdata_y=squeeze(mean(mean(mean(itcdata(...
+            t_start:t_end,chan,f_end:f_start,pp.cond_diff{1},s_inds_g(:,group)),1),3),4)) -...
+            squeeze(mean(mean(mean(itcdata(...
+            t_start:t_end,chan,f_end:f_start,pp.cond_diff{2},s_inds_g(:,group)),1),3),4));
+        [p_tfwin(:,chan,freq_range,win) stats]=robustfit(ero_scatterdata_x,ero_scatterdata_y);
+        %[p_tfwin(:,chan,freq_range,win),~,~,~,stats]=regress(ero_scatterdata_y,[ones(length(ero_scatterdata_x),1) ero_scatterdata_x]);
+        scatter_h(group)=scatter(ero_scatterdata_x,ero_scatterdata_y, scl.g_color{group}); hold on;
+        %plot(linspace(ero_axes_diff(1),ero_axes_diff(2),100),linspace(ero_axes_diff(3),ero_axes_diff(4),100),'k--'); hold on;
+        plot(linspace(ero_axes_diff(1),ero_axes_diff(2),100),linspace(ero_axes_diff(1),ero_axes_diff(2),100)*...
+            p_tfwin(2,chan,freq_range,win)+p_tfwin(1,chan,freq_range,win), scl.g_color{group}); hold on;
+        if stats.p(2) < .05
+            text((ero_axes_diff(1)+ero_axes_diff(2))/2,(ero_axes_diff(4))*(group/12),['s=',num2str(stats.s,3)],'Color',scl.g_color{group});
+        end
+        axis(ero_axes_diff);
+    else
+        ero_scatterdata_y=squeeze(mean(mean(mean(itcdata(...
+            t_start:t_end,chan,f_end:f_start,cond,s_inds_g(:,group)),1),3),4)) - ...
+            squeeze(mean(mean(mean(itcdata(...
+            1:scl.t_zero,chan,f_end:f_start,cond,s_inds_g(:,group)),1),3),4));
+        [p_tfwin(:,chan,freq_range,win) stats]=robustfit(ero_scatterdata_x,ero_scatterdata_y);
+        %[p_tfwin(:,chan,freq_range,win),~,~,~,stats]=regress(ero_scatterdata_y,[ones(length(ero_scatterdata_x),1) ero_scatterdata_x]);
+        scatter_h(group)=scatter(ero_scatterdata_x,ero_scatterdata_y, scl.g_color{group}); hold on;
+        %plot(linspace(ero_axes(1),ero_axes(2),100),linspace(ero_axes(3),ero_axes(4),100),'k--'); hold on;
+        plot(linspace(ero_axes(1),ero_axes(2),100),linspace(ero_axes(1),ero_axes(2),100)*...
+            p_tfwin(2,chan,freq_range,win)+p_tfwin(1,chan,freq_range,win), scl.g_color{group}); hold on;
+        if stats.p(2) < .05
+        text((ero_axes(1)+ero_axes(2))/2,(ero_axes(4))*(group/12),['s=',num2str(stats.s,3)],'Color',scl.g_color{group});
+        end
+        axis(ero_axes);
+    end
+    v(chan,freq_range,cond,win,1) = min(ero_scatterdata_y); v(chan,freq_range,cond,win,2) = max(ero_scatterdata_y);
+    end
+    hold off; grid on;
+    end
+    end
+adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle);
+tightfig; %dragzoom;
+end
+end
+c(1)=min(min(min(min(v(:,:,1:end-1,:,1))))); c(2)=max(max(max(max(v(:,:,1:end-1,:,2)))));
+c_diff(1)=min(min(min(v(:,:,end,:,1)))); c_diff(2)=max(max(max(v(:,:,end,:,2))));
+
+end
+
+clear_plotassistvars
+
 
 %% image phase in time-freq at a chosen channel
 
@@ -694,8 +800,8 @@ subplot_dims=sp_d;
 %pp.figdum=pp.figdum_init;
 pp.figdum_init=pp.figdum;
 v=zeros(length(pp.chosen_g),length(pp.chosen_chan(pp.plotn_chan)),length(pp.plotn_cond),2);
-for group=pp.chosen_g
-for chan=[7] %pp.chosen_chan(pp.plotn_chan)
+for group=pp.chosen_g(pp.plotn_g)
+for chan=[7] % 16 25 57 58] %pp.chosen_chan(pp.plotn_chan)
 pp.figdum=pp.figdum+1;
 figure(pp.figdum); subplot_dummy=0;
 overtitle{pp.figdum}=sprintf('%s / %s',scl.chan_label{chan},scl.g_label{group});
@@ -728,17 +834,17 @@ end
 end
 c(1)=min(min(min(v(:,:,1:end-1,1)))); c(2)=max(max(max(v(:,:,1:end-1,2))));
 c_diff(1)=min(min(v(:,:,end,1))); c_diff(2)=max(max(v(:,:,end,2)));
+cmap=makecmap(c);
+cmap_diff=makecmap(c_diff);
 for fig=pp.figdum_init+1:pp.figdum
 figure(fig)
 for splot=1:length(pp.plotn_cond);
     if splot==length(pp.plotn_cond)
         subplot(sp_d(1),sp_d(2),splot); caxis([.9*c_diff(1) .9*c_diff(2)]);
-        cmap=makecmap(c_diff);        
-        colormap(cmap);
+        colormap(cmap_diff);
     else
         subplot(sp_d(1),sp_d(2),splot); caxis([.9*c(1) .9*c(2)]);
-        %cmap=makecmap(c);
-        colormap(pp.cmap);
+        colormap(cmap);
     end
     colorbar;
     freezeColors;
@@ -827,8 +933,10 @@ x_plotlabel=' ';
 y_plotlabel=' ';
 subplot_dims=[length(pp.plotn_cond),length(pp.t_start_ms)];
 
-itc_topo_scale=[0.1 0.5];
-itc_diff_limits=[-.08 .08];
+itc_topo_scale=[0.2 0.5];
+itc_diff_limits=[-.03 .08];
+cmap=makecmap(itc_topo_scale);
+cmap_diff=makecmap(itc_diff_limits);
 
 %
 v=zeros(length(pp.plotn_cond),length(pp.chosen_g),length(pp.f_start_hz(pp.plotn_f)),length(pp.t_start_ms),2);
@@ -852,11 +960,13 @@ for cond=pp.plotn_cond
             topo_data=squeeze(mean(mean(mean(mean(itcdata(t_start:t_end,pp.chosen_topochan,f_end:f_start,pp.cond_diff{1},s_inds_g(:,group)),1),3),4),5)) - ...
                 squeeze(mean(mean(mean(mean(itcdata(t_start:t_end,pp.chosen_topochan,f_end:f_start,pp.cond_diff{2},s_inds_g(:,group)),1),3),4),5));
             topoplot(topo_data,chan_locs,'maplimits',[itc_diff_limits(1) itc_diff_limits(2)],...
-                'electrodes','off','colormap',pp.cmap,'style','fill','numcontour',7);
+                'electrodes','off','colormap',cmap_diff,'style','fill','numcontour',7);
+            freezeColors;
         else
             topo_data=squeeze(mean(mean(mean(itcdata(t_start:t_end,pp.chosen_topochan,f_end:f_start,cond,s_inds_g(:,group)),1),3),5));
             topoplot(topo_data,chan_locs,'maplimits',[itc_topo_scale(1) itc_topo_scale(2)],...
-                'electrodes','off','colormap',pp.cmap,'style','fill','numcontour',7);
+                'electrodes','off','colormap',cmap,'style','fill','numcontour',7);
+            freezeColors;
         end
         shading flat
         else
@@ -875,6 +985,7 @@ for cond=pp.plotn_cond
     end
     colorscale([1 256], cb_lim, range(cb_lim)/5, 'vert', ...
         'Position',cb_pos);
+    freezeColors;
 end
 adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,subplot_dims);
 %fig(pp.figdum, 'units', 'centimeters', 'width', 17, 'height', length(pp.plotn_cond)*3, ...
@@ -951,9 +1062,13 @@ clear_plotassistvars
 %% plot per-subject lines of the shape of results for a certain measure across conditions (ERO)
 
 chosen_chan=7;
-win_t=[200 400];
-%win_t=[300 500];
+%win_t=[200 400];
+win_t=[300 500];
 win_f=[4 5.3];
+
+colorkey={'r','g','b','m','k','c'};
+sitekey={'UConn','Indiana','Iowa','SUNY','WashU','UCSD'};
+counter=zeros(1,6);
 
 [~,t_s]=min(abs(scl.t_ms-win_t(1))); [~,t_e]=min(abs(scl.t_ms-win_t(2)));
 [~,f_s]=min(abs(scl.freqs-win_f(1))); [~,f_e]=min(abs(scl.freqs-win_f(2)));
@@ -961,21 +1076,27 @@ win_f=[4 5.3];
 figure; gdum=0;
 overtitle=sprintf('ERO at %s in %1.1f - %1.1f Hz from %d - %d ms',...
     scl.chan_label{chosen_chan},win_f(1),win_f(2),win_t(1),win_t(2));
-for group=pp.chosen_g
+for group=pp.chosen_g(pp.plotn_g)
     conddiff_dir=zeros(imp.maxconds,1);
     gdum=gdum+1;
-    subplot(1,2,gdum)
+    %subplot(1,2,gdum)
     linedata=meanx(wave_totdata(t_s:t_e,chosen_chan,f_e:f_s,:,s_inds_g(:,group)),[4 5]); %ERO
     %linedata=meanx(wave_totdata(t_s:t_e,chosen_chan,f_e:f_s,:,s_inds_g(:,group)),[4 5]) - ...
     %    meanx(wave_totdata(1:scl.t_zero,chosen_chan,f_e:f_s,:,s_inds_g(:,group)),[4 5]); %ERSP
     ranova_data{gdum}=linedata';
     for s=1:size(linedata,2)
+    site=str2double(mat_list{s}(65));
+    counter(site)=counter(site)+1;
     if linedata(pp.cond_diff{1},s) > linedata(pp.cond_diff{2},s)
-        mark='b-o'; conddiff_dir(1)=conddiff_dir(1)+1;
+        mark=['b-o'];
+        conddiff_dir(1)=conddiff_dir(1)+1;
     else
-        mark='m--*'; conddiff_dir(2)=conddiff_dir(2)+1;
+        mark=['m--*'];
+        conddiff_dir(2)=conddiff_dir(2)+1;
     end
-    plot(linedata(:,s),mark); hold on; axis([0 imp.maxconds+1 10 139]);
+    subplot(1,6,site);
+    title(sitekey{site});
+    plot(linedata(:,s),mark); hold on; axis([0 imp.maxconds+1 -9 409]);
     end
     conddiff_text=sprintf(['%s > %s : %d/%d (%2.0f%%), M=%2.1f',char(177),'%1.1f'],...
         scl.cond_label{pp.cond_diff{1}},scl.cond_label{pp.cond_diff{2}},...
@@ -989,17 +1110,22 @@ for group=pp.chosen_g
     set(gca,'XTick',[1:imp.maxconds],'XTickLabel',scl.cond_label);
     xlabel('Condition');
     ylabel('ERO');
-    title(scl.g_label{group});    
+    %title(scl.g_label{group});    
 end
 [p,ranova_table]=anova_rm(ranova_data,'off');
 plottitle(overtitle);
-clear_plotassistvars
+tightfig;
+clear_plotassistvars;
 
-%% plot per-subject lines of the shape of results for a certain measure across conditions (ITC)
+%% plot per-subject lines of the shape of ITC for a certain measure across conditions (ITC)
 
 chosen_chan=7;
 win_t=[200 400];
 win_f=[4 5.3];
+
+colorkey={'r','g','b','m','k','c'};
+sitekey={'UConn','Indiana','Iowa','SUNY','WashU','UCSD'};
+counter=zeros(1,6);
 
 [~,t_s]=min(abs(scl.t_ms-win_t(1))); [~,t_e]=min(abs(scl.t_ms-win_t(2)));
 [~,f_s]=min(abs(scl.freqs-win_f(1))); [~,f_e]=min(abs(scl.freqs-win_f(2)));
@@ -1007,20 +1133,24 @@ win_f=[4 5.3];
 figure; gdum=0;
 overtitle=sprintf('ITC at %s in %1.1f - %1.1f Hz from %d - %d ms',...
     scl.chan_label{chosen_chan},win_f(1),win_f(2),win_t(1),win_t(2));
-for group=pp.chosen_g
+for group=pp.chosen_g(pp.plotn_g)
     conddiff_dir=zeros(imp.maxconds,1);
     gdum=gdum+1;
-    subplot(1,2,gdum)
+    %subplot(1,2,gdum)
     linedata=meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,:,s_inds_g(:,group)),[4 5]);
     %linedata=meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,:,s_inds_g(:,group)),[4 5]) - ...
     %    meanx(itcdata(1:scl.t_start,chosen_chan,f_e:f_s,:,s_inds_g(:,group)),[4 5]);
     ranova_data{gdum}=linedata';
     for s=1:size(linedata,2)
+    site=str2double(mat_list{s}(65));
+    counter(site)=counter(site)+1;
     if linedata(pp.cond_diff{1},s) > linedata(pp.cond_diff{2},s)
         mark='b-o'; conddiff_dir(1)=conddiff_dir(1)+1;
     else
         mark='m--*'; conddiff_dir(2)=conddiff_dir(2)+1;
     end
+    subplot(1,6,site);
+    title(sitekey{site});
     plot(linedata(:,s),mark); hold on; axis([0 imp.maxconds+1 0 1]);
     end
     conddiff_text=sprintf(['%s > %s : %d/%d (%2.0f%%), M=%0.2f',char(177),'%0.2f'],...
@@ -1035,22 +1165,24 @@ for group=pp.chosen_g
     set(gca,'XTick',[1:imp.maxconds],'XTickLabel',scl.cond_label);
     xlabel('Condition');
     ylabel('ITC');
-    title(scl.g_label{group});    
+    %title(scl.g_label{group});    
 end
 [p,ranova_table]=anova_rm(ranova_data,'off');
 plottitle(overtitle);
 clear_plotassistvars
 
-%% scatter per-subject condition difference with behavioral criteria
+%% scatter per-subject ITC with behavioral criteria
 
 chosen_chan=7;
 win_t=[200 400];
-win_f=[4.6 6.4];
+win_f=[4 5.3];
 
 [~,t_s]=min(abs(scl.t_ms-win_t(1))); [~,t_e]=min(abs(scl.t_ms-win_t(2)));
 [~,f_s]=min(abs(scl.freqs-win_f(1))); [~,f_e]=min(abs(scl.freqs-win_f(2)));
 
-for po=1:5
+fitmat=zeros(2,4);
+
+for po=1:4
 
 figure;
 overtitle=sprintf('ITC at %s in %1.1f - %1.1f Hz from %d - %d ms',...
@@ -1061,11 +1193,15 @@ overtitle=sprintf('ITC at %s in %1.1f - %1.1f Hz from %d - %d ms',...
 xdata=behdata.avgbet_po(po,s_inds_g(:,scl.g_all));
 %xdata=behdata.stdbet_po(po,s_inds_g(:,scl.g_all));
 %xdata=behdata.avgbet_po2(po,s_inds_g(:,scl.g_all));
-%ydata=meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,pp.cond_diff{1},s_inds_g(:,scl.g_all)),5) - ...
-%    meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,pp.cond_diff{2},s_inds_g(:,scl.g_all)),5);
-ydata=meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,pp.cond_diff{1},s_inds_g(:,scl.g_all)),5);
+ydata=meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,pp.cond_diff{1},s_inds_g(:,scl.g_all)),5) - ...
+    meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,pp.cond_diff{2},s_inds_g(:,scl.g_all)),5);
+%ydata=meanx(itcdata(t_s:t_e,chosen_chan,f_e:f_s,pp.cond_diff{1},s_inds_g(:,scl.g_all)),5);
 
-scatter(xdata,ydata)
+fitmat(:,po)=robustfit(xdata,ydata);
+
+scatter(xdata,ydata); hold on;
+plot(linspace(10,50,100),linspace(10,50,100)*fitmat(2,po)+fitmat(1,po))
+
 
 %set(gca,'XTick',[1:imp.maxconds],'XTickLabel',scl.cond_label);
 xlabel('Criterion');
@@ -1164,7 +1300,7 @@ for freq_range=pp.plotn_f
     scatter_h(group)=scatter(itc_scatterdata_x,itc_scatterdata_y, scl.g_color{group}); hold on;
     %
     %plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100),'k--'); hold on;
-    plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100)*...
+    plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(1),itc_axes(2),100)*...
         p_tfwin(2,cond,chan,freq_range,win)+p_tfwin(1,cond,chan,freq_range,win), scl.g_color{group}); hold on;
     end
     hold off; grid on;
@@ -1213,7 +1349,7 @@ for chan=pp.chosen_chan(pp.plotn_chan)
                 %scatter(s_demogs(s_inds_g(:,group),:).EEG_Age,itc_scatterdata_y, scl.g_color{group-2}); hold on;
                 %scatter(itc_scatterdata_x+itc_scatterdata_y,itc_scatterdata_x-itc_scatterdata_y); hold on; axis(itc_axes); grid on;
                 plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100),'k--'); hold on;
-                plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100)*p_tfwin(2,chan,freq_range,win)+p_tfwin(1,chan,freq_range,win), scl.g_color{group}); hold on;
+                plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(1),itc_axes(2),100)*p_tfwin(2,chan,freq_range,win)+p_tfwin(1,chan,freq_range,win), scl.g_color{group}); hold on;
             end
             hold off; axis(itc_axes); grid on;
             %title(sprintf('%d - %d ms, %1.1f - %1.1f Hz, %s',pp.t_start_ms(win),pp.t_end_ms(win),pp.f_start_hz(freq_range),pp.f_end_hz(freq_range),scl.chan_label{chan}));
@@ -1273,7 +1409,7 @@ for freq_range=pp.plotn_f
     scatter_h(group)=scatter(ero_scatterdata_x,ero_scatterdata_y, scl.g_color{group}); hold on;
     %
     %plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100),'k--'); hold on;
-    plot(linspace(ero_axes(1),ero_axes(2),100),linspace(ero_axes(3),ero_axes(4),100)*...
+    plot(linspace(ero_axes(1),ero_axes(2),100),linspace(ero_axes(1),ero_axes(2),100)*...
         p_tfwin(2,chan,freq_range,cond,win,group)+p_tfwin(1,chan,freq_range,cond,win,group), scl.g_color{group}); hold on;
     end
     hold off; grid on;
@@ -1332,7 +1468,7 @@ for freq_range=pp.plotn_f
     scatter_h(group)=scatter(itc_scatterdata_x,itc_scatterdata_y, scl.g_color{group}); hold on;
     %
     %plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100),'k--'); hold on;
-    plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(3),itc_axes(4),100)*...
+    plot(linspace(itc_axes(1),itc_axes(2),100),linspace(itc_axes(1),itc_axes(2),100)*...
         p_tfwin(1,chan,freq_range,cond,win,group)+p_tfwin(2,chan,freq_range,cond,win,group), scl.g_color{group}); hold on;
     end
     hold off;  grid on;
@@ -1532,12 +1668,15 @@ for cond=pp.plotn_cond
         subplot(length(pp.plotn_cond),pp.maxwin,subplot_dummy);
         %imagesc(itc_freqcorr); %caxis(rho_limits);
         %axis xy;
-        contourf(itc_freqcorr); %caxis(rho_limits);
+        contourf(itc_freqcorr,pp.n_contour); %caxis(rho_limits);
         colormap(pp.cmap)
         v(cond,win,:)=caxis;
         title(sprintf('%s, %d - %d ms, %s',scl.cond_label{cond},pp.t_start_ms(win),pp.t_end_ms(win),scl.chan_label{chan}));
         %title(sprintf('%s, %d - %d ms',scl.cond_label{cond},pp.t_start_ms(win),pp.t_end_ms(win)));
         xlabel('Freq. (Hz)'); ylabel('Freq. (Hz)');
+        set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label);
+        set(gca,'XTick',scl.f_ytick,'XTickLabel',scl.f_label);
+        
     end
 end
 c(1)=min(min(v(:,:,1))); c(2)=max(max(v(:,:,2)));
@@ -1744,7 +1883,7 @@ for cond=1:imp.maxconds
         %
         %plot(linspace(phase_axes(1),phase_axes(2),100),linspace(phase_axes(3),phase_axes(4),100),'k--'); hold on;
         %plot(linspace(phase_axes(1),phase_axes(2),100), ...
-        %    linspace(phase_axes(3),phase_axes(4),100)*p_phase(1,cond,win)+p_phase(2,cond,win),scl.g_color{group});
+        %    linspace(phase_axes(1),phase_axes(2),100)*p_phase(1,cond,win)+p_phase(2,cond,win),scl.g_color{group});
         end
         hold off; axis(phase_axes); grid on;        
     end
@@ -1784,7 +1923,7 @@ for cond=1:imp.maxconds
         %
         plot(linspace(phase_axes(1),phase_axes(2),100),linspace(phase_axes(3),phase_axes(4),100),'k--'); hold on;
         plot(linspace(phase_axes(1),phase_axes(2),100), ...
-            linspace(phase_axes(3),phase_axes(4),100)*p_phase(2,cond,win)+p_phase(1,cond,win),scl.g_color{group});
+            linspace(phase_axes(1),phase_axes(2),100)*p_phase(2,cond,win)+p_phase(1,cond,win),scl.g_color{group});
         end
         hold off; axis(phase_axes); grid on;
         title(sprintf('%1.1f Hz, %s',pp.f_indiv_hz(freq),scl.chan_label{chan}));

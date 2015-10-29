@@ -32,7 +32,7 @@ f_indiv_hz=[2, 4, 6, 10, 18];   %indiv bands
 end
 chosen_freq=[6 10 13 16 19];
 
-chosen_g=[10 11];
+chosen_g=[9];
 chosen_p=[14 12 4 9];
 
 %t_start_ms=[0 100 200 300 400 600];
@@ -40,24 +40,26 @@ chosen_p=[14 12 4 9];
 t_win_start=0;
 t_win_end=500;
 t_win_space=100;
-t_start_ms=[t_win_start:t_win_space:t_win_end];
-t_end_ms=t_start_ms+t_win_space;
+%t_start_ms=[t_win_start:t_win_space:t_win_end];
+%t_end_ms=t_start_ms+t_win_space;
+t_start_ms=[90 160 250 290 340 400];
+t_end_ms=[110 180 270 310 380 800];
 
-plotn_chan=1:9; %[2 5 8]; %[1 2 3 4 6 8]; %3
+plotn_chan=1:length(chosen_chan); %[1 3 5]; %[2 5 8]; %[1 2 3 4 6 8]; %3
 plotn_cond=1:imp.maxconds+1;
 plotn_f=[1 3 5];
-plotn_g=1:2;
+plotn_g=1;
 plotn_p=[1:4];
 plotn_t=1:length(t_start_ms);
 
 
 maxwin=length(t_start_ms);
 %hist_ax=[-1 1 0 round(size(s_inds_g,1)/6)];
-hist_ax=[-.8 .8 0 10];
+hist_ax=[-.6 .6 0 100];
 %hist_nbin=round(size(s_inds_g,1)/6);
-hist_nbin=10;
+hist_nbin=30;
 p_loc=[hist_ax(1)/2 hist_ax(4)*3/4];
-cmap_bone=flipud(bone(256));
+%cmap_bone=flipud(bone(256));
 pmkmp_scheme='cubicl'; %'linlhot' is also good
 cmap=pmkmp(256,pmkmp_scheme);
 %cmap(1:48,:)=[];
@@ -79,7 +81,7 @@ sp_d=numSubplots(length(plotn_cond));
 %pack into a struct
 pp=v2struct(cond_diff, chosen_g, chosen_chan, f_start_hz, f_end_hz, chosen_freq, ...
     chosen_cond, chosen_s, coh_absmin, coh_absmax, t_start_ms, t_end_ms, maxwin, hist_ax, ...
-    hist_nbin, p_loc, cmap_bone, cmap, cmap_line, pmkmp_scheme_diff, ...
+    hist_nbin, p_loc, cmap, cmap_line, ...
     pmkmp_scheme_line, figdum_init, figdum, n_contour, ...
     plotn_chan, plotn_cond, plotn_g, plotn_f, plotn_t, chosen_topochan, ...
     chosen_coh_limit, chosen_coh_limit_diff, f_indiv_hz, chosen_p, plotn_p);

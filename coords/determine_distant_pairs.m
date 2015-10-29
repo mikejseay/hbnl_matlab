@@ -24,12 +24,12 @@ function pair_subset=determine_distant_pairs(coords_filepath,exclude_logic, ...
         %left-right)
         % 3 = diagonal pairs
         
+    %edges_per_chan indicates how many edges you desire per channel
+        
     %direction_spec indicates how to plot the arcs (purely aesthetic)
         % 1 = all clockwise
         % 2 = alternate every other
         % 3 = alternate erratically
-        
-    %edges_per_chan indicates how many edges you desire per channel
         
     % output is the indices of the chosen / plotted pairs
     % as a pairs x 2 matrix, can be used as the input for erp_analysis in
@@ -164,6 +164,8 @@ n_chosen_pairs=1:size(pair_subset,1);
 distant_pair_colors=distinguishable_colors(length(n_chosen_pairs));
 %n_chosen_pairs=31:60;
 
+if false
+
 %plot them as arcs on a head
 dummy_data=zeros(length(chan_locs),1);
 figure; topoplot(dummy_data,chan_locs,'style','blank'); hold on;
@@ -191,6 +193,8 @@ for pair=n_chosen_pairs
 end
 
 clickableLegend(arc_h,{p_label{n_chosen_pairs}})
+
+end
 
 fprintf('%d pairs determined.\n',size(pair_subset,1))
 

@@ -2,9 +2,14 @@
 
 %% filter (run only once)
 
-filter_lowpass=16;
-erpdata=filter_erp_datastruct(erpdata,param_struct.rate, ...
-    filter_lowpass);
+if true
+
+erpdata=filter_erpdata(erpdata,param_struct.timerate);
+
+%erpdata=filter_erp_datastruct(erpdata,param_struct.rate, ...
+%    filter_lowpass);
+
+end
 
 %% baseline (run only once)
 

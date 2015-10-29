@@ -1,7 +1,9 @@
 function mat_list=coh_updatemats(matpath,demogsfile)
 
 %update mat files from directory
-
+if nargin<2
+    demogsfile=[];
+end
 
 %filepath='/active_projects/mike/fmri_phase4_err_cleanCSD/';
 if iscell(matpath)
@@ -14,13 +16,13 @@ for file=1:length(list)
     [~,~,ext]=fileparts(list(file).name);
     if strcmpi(ext,'.mat')
         md=md+1;
-        mat_list{md}=[matpath,list(file).name];
+        mat_list{md}=fullfile(matpath,list(file).name);
     end
 end
 end
 
 %optionally reduce the list to only a certain unique file string list
-if true
+if exist(demogsfile,'file')
 
     load(demogsfile)
     n_files=length(mat_list);
@@ -33,7 +35,7 @@ if true
         file_string{f}=mat_list{f}(string_loc:string_loc+10);
     end
     
-    [~,is1,is2]=intersect(file_string, uniquefilestring);    
+    [~,is1,~]=intersect(file_string, uniquefilestring);    
     %file_string_is={file_string{is1}}';
     %uniquefilestring_is={uniquefilestring{is2}}';
     

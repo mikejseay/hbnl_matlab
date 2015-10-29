@@ -6,7 +6,7 @@ if ~exist('tfparams','var')
     t_end=imp.maxtimepts;
     %define absolute ms edges
     ms_start=-param_struct.prestim_ms;
-    ms_end=ms_start + ( imp.maxtimepts * (1000 / param_struct.rate) );
+    ms_end=ms_start + ( imp.maxtimepts * (1000 / param_struct.timerate) );
     t_ms=linspace(ms_start, ms_end, imp.maxtimepts+1);
     %clip surplus points beyond declared end point
     t_ms(imp.maxtimepts+1:end)=[];
@@ -89,4 +89,5 @@ scl=v2struct(chan_color, chan_label, ...
 clear chan_color chan_label cond_label f_color f_label f_nlabel f_ytick ...
     freqs p_color p_label s_color s_label t_end t_start t_ms t_xtick t_xtick_ms t_zero
 
-clear ms_start ms_end ms_tickint tick c i cond_inds chan chosen_s cond cond_label_seed freq pair
+clear ms_start ms_end ms_tickint tick c i cond_inds chan chosen_s cond ...
+    cond_label_seed freq pair phi

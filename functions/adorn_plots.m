@@ -16,7 +16,7 @@ for row=1:subplot_dims(1)
 end
 end
 
-if false
+if true
 if subplot_dims(2) > 5 %if we're probably plotting time windows
     n_cols = subplot_dims(2) - 1; %skip the last (we get it)
 else

@@ -25,6 +25,8 @@ end
 
 %%
 
+if true
+
 %find strings present in both
 [~,is1,is2]=intersect(file_string, uniquefilestring);
 
@@ -42,6 +44,8 @@ smalltable=table(file_string);
 %s_demogs=join(smalltable,bigtable);
 s_demogs=join(smalltable,bigtable,'LeftKeys','file_string','RightKeys','uniquefilestring');
 %s_demogs=join(smalltable,bigtable,'LeftKeys','file_string','RightKeys','SortedFileString');
+
+end
 
 %cut out subjects that had insufficient data
 s_demogs(find(imp.bad_s==1),:)=[];
@@ -64,7 +68,7 @@ end
 %%
 s_inds_g(:,9) = s_inds;
 
-if true
+if false
 s_inds_g(:,10) = s_inds & strcmpi(s_demogs.group,'Comparison');
 s_inds_g(:,11) = s_inds & strcmpi(s_demogs.group,'Alcoholic');
 fprintf('%d CTL subjects and %d ALC subjects remain\n',sum(s_inds_g(:,10)),sum(s_inds_g(:,11)))
