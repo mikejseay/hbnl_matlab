@@ -3,7 +3,7 @@
 figure; subplot_dummy=0;
 for cond=pp.plotn_cond
     subplot_dummy=subplot_dummy+1;
-    sp(subplot_dummy)=subplot(sp_d(1),sp_d(2),subplot_dummy);
+    sp(subplot_dummy)=subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy);
     for group=pp.chosen_g
         if cond==imp.maxconds+1
         scatter(peakmat(s_inds_g(:,group),pp.cond_diff{1},2) - peakmat(s_inds_g(:,group),pp.cond_diff{2},2),...
@@ -37,7 +37,7 @@ for chan=pp.chosen_chan(pp.plotn_chan)
     subplot_dummy=0;
     for cond=pp.plotn_cond
         subplot_dummy=subplot_dummy+1;
-        sp(cond)=subplot(sp_d(1),sp_d(2),subplot_dummy);
+        sp(cond)=subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy);
         for group=pp.chosen_g(pp.plotn_g)
             if cond==imp.maxconds+1
                 erp_plot_data = mean(mean(erpdata(:,chan,pp.cond_diff{1},s_inds_g(:,group)),3),4) - ...
@@ -53,6 +53,7 @@ for chan=pp.chosen_chan(pp.plotn_chan)
             h_line(cond,group)=h.mainLine;
         end
         axis([scl.t_start scl.t_end -15 20]);
+        %axis tight
         vline(scl.t_zero,'k--'); hold off;
         set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms)
         grid on
@@ -95,6 +96,19 @@ tightfig;
 linkaxes(sp)
 end
 clear_plotassistvars
+
+%% plot ERPs / topographies for individual subjects with mike cohen's ERPviewer
+
+s=9;
+
+for cond=1:3
+    if cond==imp.maxconds+1
+        erpviewerx(scl.t_ms,squeeze(erpdata(:,:,pp.cond_diff{1},s))' - ...
+            squeeze(erpdata(:,:,pp.cond_diff{2},s))',chan_locs);
+    else
+        erpviewerx(scl.t_ms,squeeze(erpdata(:,:,cond,s))',chan_locs);
+    end
+end
 
 %% plot topography of ERPs
 
@@ -217,7 +231,7 @@ for freq_range=pp.plotn_f
     subplot_dummy=0;
     for cond=pp.plotn_cond
         subplot_dummy=subplot_dummy+1;
-        sp(cond)=subplot(sp_d(1),sp_d(2),subplot_dummy);
+        sp(cond)=subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy);
         for group=pp.chosen_g(pp.plotn_g)
             if cond==imp.maxconds+1
                 ero_plot_data = mean(mean(mean(wave_totdata(:,chan,f_end:f_start,pp.cond_diff{1},s_inds_g(:,group)),3),4),5) - ...
@@ -297,7 +311,7 @@ sp_rowlabel=[];
 sp_columnlabel=[];
 x_plotlabel='Time (ms)';
 y_plotlabel='Frequency (Hz)';
-subplot_dims=sp_d;
+subplot_dims=pp.sp_d;
 
 pp.figdum=pp.figdum_init;
 v=zeros(length(pp.chosen_g),length(pp.chosen_chan(pp.plotn_chan)),length(pp.plotn_cond),2);
@@ -308,7 +322,7 @@ figure(pp.figdum); subplot_dummy=0;
 overtitle{pp.figdum}=sprintf('%s / %s',scl.chan_label{chan},scl.g_label{group});
 for cond=pp.plotn_cond
     subplot_dummy=subplot_dummy+1;
-    subplot(sp_d(1),sp_d(2),subplot_dummy)
+    subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy)
     if cond==imp.maxconds+1
         ero_plot_data=squeeze(mean(mean(wave_totdata(:,chan,:,pp.cond_diff{1},s_inds_g(:,group)),4),5)-...
             mean(mean(wave_totdata(:,chan,:,pp.cond_diff{2},s_inds_g(:,group)),4),5));
@@ -342,12 +356,12 @@ for fig=pp.figdum_init+1:pp.figdum
 figure(fig)
 for splot=1:subplot_dummy
     if splot==subplot_dummy
-        subplot(sp_d(1),sp_d(2),splot); caxis([.9*c_diff(1) .9*c_diff(2)]);
+        subplot(pp.sp_d(1),pp.sp_d(2),splot); caxis([.9*c_diff(1) .9*c_diff(2)]);
         %colormap(pp.cmap_diff);
         cmap=makecmap(c_diff);
         colormap(cmap);
     else
-        subplot(sp_d(1),sp_d(2),splot); caxis([.9*c(1) .9*c(2)]);
+        subplot(pp.sp_d(1),pp.sp_d(2),splot); caxis([.9*c(1) .9*c(2)]);
         %colormap(pp.cmap);
         cmap=makecmap(c);
         colormap(cmap);
@@ -660,7 +674,7 @@ for chan=pp.chosen_chan(pp.plotn_chan)
 figure; subplot_dummy=0;
 for cond=1:imp.maxconds
     subplot_dummy=subplot_dummy+1;
-    subplot(sp_d(1),sp_d(2),subplot_dummy)
+    subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy)
     phase_plot_data=squeeze( angle(mean(wave_evkdata(:,chan,:,cond,s_inds_g(:,group)),5)));
     %phase_plot_data=squeeze( deunwrap(mean(unwrap(angle(wave_evkdata(:,chan,:,cond,s_inds_g(:,group)))),5)));
     contourf(fliplr(contour_wrapedges(phase_plot_data))',pp.n_contour)
@@ -677,7 +691,7 @@ end
 c(1)=min(min(min(v(:,:,1:end-1,1)))); c(2)=max(max(max(v(:,:,1:end-1,2))));
 c_diff(1)=min(min(v(:,:,end,1))); c_diff(2)=max(max(v(:,:,end,2)));
 for splot=1:imp.maxconds;
-    subplot(sp_d(1),sp_d(2),splot);
+    subplot(pp.sp_d(1),pp.sp_d(2),splot);
     caxis([-pi pi]); colorbar('YTick',[-pi,0,pi],'YTickLabel',{'0',[char(177),'pi/2'],[char(177),'pi']});
 end
 tightfig; dragzoom;
@@ -791,11 +805,11 @@ clear_plotassistvars
 
 sp_rowlabel={''};
 sp_columnlabel=scl.cond_label;
-sp_rowlabel=[];
-sp_columnlabel=[];
+%sp_rowlabel=[];
+%sp_columnlabel=[];
 x_plotlabel='Time (ms)';
 y_plotlabel='Frequency (Hz)';
-subplot_dims=sp_d;
+subplot_dims=pp.sp_d;
 
 %pp.figdum=pp.figdum_init;
 pp.figdum_init=pp.figdum;
@@ -807,7 +821,7 @@ figure(pp.figdum); subplot_dummy=0;
 overtitle{pp.figdum}=sprintf('%s / %s',scl.chan_label{chan},scl.g_label{group});
 for cond=pp.plotn_cond
     subplot_dummy=subplot_dummy+1;
-    subplot(sp_d(1),sp_d(2),subplot_dummy)
+    subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy)
     if cond==imp.maxconds+1
         itc_plot_data=squeeze(mean(mean(itcdata(:,chan,:,pp.cond_diff{1},s_inds_g(:,group)),4),5)-...
             mean(mean(itcdata(:,chan,:,pp.cond_diff{2},s_inds_g(:,group)),4),5));
@@ -840,10 +854,10 @@ for fig=pp.figdum_init+1:pp.figdum
 figure(fig)
 for splot=1:length(pp.plotn_cond);
     if splot==length(pp.plotn_cond)
-        subplot(sp_d(1),sp_d(2),splot); caxis([.9*c_diff(1) .9*c_diff(2)]);
+        subplot(pp.sp_d(1),pp.sp_d(2),splot); caxis([.9*c_diff(1) .9*c_diff(2)]);
         colormap(cmap_diff);
     else
-        subplot(sp_d(1),sp_d(2),splot); caxis([.9*c(1) .9*c(2)]);
+        subplot(pp.sp_d(1),pp.sp_d(2),splot); caxis([.9*c(1) .9*c(2)]);
         colormap(cmap);
     end
     colorbar;
@@ -863,7 +877,7 @@ sp_rowlabel={''};
 sp_columnlabel=scl.cond_label;
 x_plotlabel='Time (ms)';
 y_plotlabel='Frequency (Hz)';
-subplot_dims=sp_d;
+subplot_dims=pp.sp_d;
 
 pp.figdum_init=pp.figdum;
 v=zeros(length(pp.chosen_g),length(pp.chosen_chan(pp.plotn_chan)),length(pp.plotn_cond),2);
@@ -874,7 +888,7 @@ figure(pp.figdum); subplot_dummy=0;
 overtitle{pp.figdum}=sprintf('%s / %s',scl.chan_label{chan},scl.g_label{group});
 for cond=pp.plotn_cond
     subplot_dummy=subplot_dummy+1;
-    subplot(sp_d(1),sp_d(2),subplot_dummy)
+    subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy)
     if cond==imp.maxconds+1
         itc_plot_data=squeeze(mean(mean(itcdata(:,chan,:,pp.cond_diff{1},s_inds_g(:,group)),4),5)-...
             mean(mean(itcdata(:,chan,:,pp.cond_diff{2},s_inds_g(:,group)),4),5));
@@ -910,9 +924,9 @@ for fig=pp.figdum_init+1:pp.figdum
 figure(fig)
 for splot=1:length(pp.plotn_cond);
     if splot==length(pp.plotn_cond)
-        subplot(sp_d(1),sp_d(2),splot); caxis([.9*c_diff(1) .9*c_diff(2)]);
+        subplot(pp.sp_d(1),pp.sp_d(2),splot); caxis([.9*c_diff(1) .9*c_diff(2)]);
     else
-        subplot(sp_d(1),sp_d(2),splot); caxis([.9*c(1) .9*c(2)]);
+        subplot(pp.sp_d(1),pp.sp_d(2),splot); caxis([.9*c(1) .9*c(2)]);
     end
     colorbar;
 end
@@ -1750,7 +1764,7 @@ pp.figdum=pp.figdum+1;
 figure(pp.figdum); subplot_dummy=0;
 for cond=pp.plotn_cond
     subplot_dummy=subplot_dummy+1;
-    subplot(sp_d(1)+1,sp_d(2),subplot_dummy)
+    subplot(pp.sp_d(1)+1,pp.sp_d(2),subplot_dummy)
     if cond==imp.maxconds+1
         ispc_plot_data=squeeze( mean(abs(sum(wave_evkdata(:,chan,:,pp.cond_diff{1},s_inds_g(:,group)),5))./ ...
             sum(abs(wave_evkdata(:,chan,:,pp.cond_diff{1},s_inds_g(:,group))),5),4) ) - ...
@@ -1780,9 +1794,9 @@ for fig=pp.figdum_init+1:pp.figdum
 figure(fig)
 for splot=pp.plotn_cond;
     if splot==imp.maxconds+1
-        subplot(sp_d(1)+1,sp_d(2),splot); caxis([c_diff(1) c_diff(2)]);
+        subplot(pp.sp_d(1)+1,pp.sp_d(2),splot); caxis([c_diff(1) c_diff(2)]);
     else
-        subplot(sp_d(1)+1,sp_d(2),splot); caxis([c(1) c(2)]);
+        subplot(pp.sp_d(1)+1,pp.sp_d(2),splot); caxis([c(1) c(2)]);
     end
     colorbar;
 end

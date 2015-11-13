@@ -145,7 +145,7 @@ prestim_interestpairs=[92 96 98 100 104]; %102 108
 pp.figdum_init=pp.figdum;
 v=zeros(length(pp.chosen_g),imp.maxpairs,length(pp.plotn_cond),2);
 for group=pp.chosen_g(pp.plotn_g)
-for pair=[7 8 36 37] %7 8 12 36 37 41] %prestim_interestpairs %pp.chosen_p(pp.plotn_p)
+for pair=[10 27] %43 45 54 77] %10 27  %7 8 12 36 37 41] %prestim_interestpairs %pp.chosen_p(pp.plotn_p)
     pp.figdum=pp.figdum+1;
     figure(pp.figdum); subplot_dummy=0; 
     overtitle{pp.figdum}=sprintf('%s / %s',scl.p_label{pair},scl.g_label{group});
@@ -166,7 +166,7 @@ for pair=[7 8 36 37] %7 8 12 36 37 41] %prestim_interestpairs %pp.chosen_p(pp.pl
         shading flat
         %imagesc(mean(cohstats(:,:,cond,pair,s_inds_g(:,group)),5)');
         %axis([scl.t_start scl.t_end 3 imp.maxfreqs-2]);
-        axis([scl.t_start scl.t_end 1 20]);
+        axis([scl.t_start scl.t_end 1 imp.maxfreqs]);
         v(group, pair,subplot_dummy,:) = caxis;
         set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); %xlabel('Time (ms)');
         set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); %ylabel('Frequency (Hz)');
@@ -184,7 +184,8 @@ c_diff(1)=nanmin(nanmin(nanmin(v(:,:,end,1)))); c_diff(2)=nanmax(nanmax(nanmax(v
 cmap=makecmap(c);
 cmap_diff=makecmap(c_diff);
 for fig=pp.figdum_init+1:pp.figdum
-    figure(fig)
+    figure(fig);
+    set(gcf,'position',[0 120 1600 400]);
     for splot=1:subplot_dummy
         if splot==subplot_dummy
             subplot(sp_d(1),sp_d(2),splot); caxis([c_diff(1) c_diff(2)]);
@@ -445,14 +446,15 @@ h=figure;
 topoplot(data,chan_locs,'style','blank');
 hold on
 for pair=1:imp.maxpairs
-    line([chan_locs(param_struct.coherence_pairs(pair,1)).topo_x chan_locs(param_struct.coherence_pairs(pair,2)).topo_x],...
-        [chan_locs(param_struct.coherence_pairs(pair,1)).topo_y chan_locs(param_struct.coherence_pairs(pair,2)).topo_y],...
+    line([chan_locs(opt.coherence_pairs(pair,1)).topo_x chan_locs(opt.coherence_pairs(pair,2)).topo_x],...
+        [chan_locs(opt.coherence_pairs(pair,1)).topo_y chan_locs(opt.coherence_pairs(pair,2)).topo_y],...
         [2.1-randn*.05 2.1+randn*.05],'Color',scl.p_color(pair,:)); hold off; %disp(num2str(pair))
 end
 
 %% coherence in frequency band as topoplot with colored lines indicating strength, multiple time windows
 sp_rowlabel={scl.cond_label{pp.plotn_cond}};
 sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
+sp_columnlabel{end}='';
 x_plotlabel='Time Windows';
 y_plotlabel='Conditions';
 
@@ -462,23 +464,43 @@ linescale=[1,256];
 %choose pair sub-set
 cbar_ticks=5;
 
-%line_limit=[-1 1];
-%line_limit_diff=[-1 1];
+line_limit=[0 1];
+%line_limit_diff=[-.5 .5];
 %
-line_limit=[0 .12];
-line_limit_diff=[-.03 .06];
+%line_limit=[-.04 .13]; %delta 2-3.5 Hz (1) @ alpha = .01
+%line_limit_diff=[-.08 .06];
+%line_limit=[-.03 .16]; %lo theta 3.8-5 Hz (2) @ alpha = .001
+%line_limit_diff=[-.01 .12];
+%line_limit=[-.02 .14]; %hi theta 5.5-7.3 Hz (3) @ alpha = .001
+%line_limit_diff=[-.09 .07];
+%line_limit=[-.06 .14]; %alpha 8-13 Hz (4) @ alpha = .01
+%line_limit_diff=[-.07 .06];
+
+%line_limit=[-.06 .16]; %all_compat
+%line_limit_diff=[-.09 .12];
+
+%line_limit=[-.06 .16]; %thetas_compat
+%line_limit_diff=[-.09 .12];
+
+%line_limit=[-.04 .17]; %thetas_compat
+line_limit_diff=[-.08 .12];
 
 cmap=makecmap(line_limit);
 cmap_diff=makecmap(line_limit_diff);
 
-alpha=.000001;
+alpha=.001;
 plot_sig=true;
 
-coh_linescale_mat=zeros(length(pp.plotn_cond),length(pp.chosen_g),length(pp.t_start_ms),length(pp.f_start_hz),imp.maxpairs);
+coh_linescale_mat=zeros(length(pp.plotn_cond),length(pp.chosen_g),length(pp.t_start_ms),length(pp.plotn_f),imp.maxpairs);
 dummydata=ones(length(chan_locs),1)*0.3;
+%pp.figdum_init=pp.figdum;
 pp.figdum=pp.figdum_init;
+    gdum2=0;
 for group=pp.chosen_g(pp.plotn_g)
-for freq_range=6 %pp.plotn_f
+    gdum2=gdum2+1;
+    fdum=0;
+for freq_range=pp.plotn_f
+    fdum=fdum+1;
     %convert scl.freqs to points
     [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
     [~,f_end]=min(abs(scl.freqs-pp.f_end_hz(freq_range)));
@@ -502,36 +524,44 @@ for cond=pp.plotn_cond
                 ranova_data{gdum}=squeeze(mean(mean(cohdata(t_start:t_end,f_end:f_start,:,pair,s_inds_g(:,statsgroup)),1),2))';
             end
             [p,~]=anova_rm(ranova_data,'off');
-            %if ~any(p([1:2,4])<alpha)
-            if p(1)>alpha
+            if ~any(p([1:2,4])<alpha)
+            %if p(1)>alpha
+            %if p(2)>alpha
+            %if p(4)>alpha
                 continue
             end
             end
             %define [x1 x2], [y1 y2], and [z1 z2] of the arc
-            x=[chan_locs(param_struct.coherence_pairs(pair,1)).topo_x chan_locs(param_struct.coherence_pairs(pair,2)).topo_x];
-            y=[chan_locs(param_struct.coherence_pairs(pair,1)).topo_y chan_locs(param_struct.coherence_pairs(pair,2)).topo_y];
+            x=[chan_locs(opt.coherence_pairs(pair,1)).topo_x chan_locs(opt.coherence_pairs(pair,2)).topo_x];
+            y=[chan_locs(opt.coherence_pairs(pair,1)).topo_y chan_locs(opt.coherence_pairs(pair,2)).topo_y];
             %z=[2.1-randn*.05 2.1+randn*.05];
             %determine strength of coherence
             if cond==imp.maxconds+1
                 paircoh_for_linecolor=mean(mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,pp.cond_diff{1},pair,s_inds_g(:,group)),1),2),3),5) - ...
                     mean(mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,pp.cond_diff{2},pair,s_inds_g(:,group)),1),2),3),5);
-                coh_linescale_mat(cond,group,win,freq_range,pair)=paircoh_for_linecolor;
+                coh_linescale_mat(cond,gdum2,win,fdum,pair)=paircoh_for_linecolor;
                 paircoh_color=(paircoh_for_linecolor-line_limit_diff(1))/(line_limit_diff(2) - line_limit_diff(1))*(linescale(2)-1);
                 paircoh_color = ceil(paircoh_color)+1;
                 linecolor=cmap_diff(paircoh_color,:);
-                linesize=abs(paircoh_for_linecolor)/range(line_limit_diff)*6;
+                linesize=norm2limits(paircoh_for_linecolor,line_limit_diff)*5;
+                linealpha=norm2limits(paircoh_for_linecolor,line_limit_diff);
             else
                 %paircoh_for_linecolor=mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5);
-                paircoh_for_linecolor=mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5) -...
-                    mean(mean(mean(cohdata(1:scl.t_zero,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5); %subtract baseline
+                paircoh_for_linecolor=norm2limits( mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5), ...
+                    chan_cohlims(pair,:) );
+                %paircoh_for_linecolor=mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5) -...
+                %    mean(mean(mean(mean(cohdata(1:scl.t_zero,f_end:f_start,:,pair,s_inds_g(:,group)),1),2),3),5); %subtract (common) baseline
                 %paircoh_for_linecolor=mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5) -...
                 %    mean(mean(mean(cohdata(scl.t_zero+1:imp.maxtimepts,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5);
                 %    %subtract post-stim coherence??
-                coh_linescale_mat(cond,group,win,freq_range,pair)=paircoh_for_linecolor;
+                coh_linescale_mat(cond,gdum2,win,fdum,pair)=paircoh_for_linecolor;
                 paircoh_color=(paircoh_for_linecolor-line_limit(1))/(line_limit(2) - line_limit(1))*(linescale(2)-1);
                 paircoh_color = ceil(paircoh_color)+1;
                 linecolor=cmap(paircoh_color,:);
-                linesize=abs(paircoh_for_linecolor)/range(line_limit)*6;
+                %linesize=norm2limits(paircoh_for_linecolor,line_limit)*5;
+                linesize=(paircoh_for_linecolor+eps)*5;
+                %linealpha=norm2limits(paircoh_for_linecolor,line_limit);
+                linealpha=paircoh_for_linecolor;
             end
             %store color for scaling
             %scale post hoc
@@ -543,7 +573,7 @@ for cond=pp.plotn_cond
             %direction=mod(pair,2);
             direction=1;
             %plot the arc
-            Draw_Arc_Clockwise([x(1),y(1)], [x(2),y(2)], linecolor, linesize, direction);
+            plot_arc([x(1),y(1)], [x(2),y(2)], linecolor, linesize, direction);
             hold on;
         end
         else
@@ -576,11 +606,14 @@ for cond=1:length(pp.plotn_cond)
     end
 end
 adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle{fig},[length(pp.plotn_cond),length(pp.t_start_ms)]);
-tightfig;
+%tightfig;
+set_print_size(17,17/scl.phi);
 end
 coh_linescale_mat(coh_linescale_mat==0)=NaN;
 c=[nanmin(nanmin(nanmin(nanmin(nanmin(coh_linescale_mat(1:end-1,:,:,:,:)))))) nanmax(nanmax(nanmax(nanmax(nanmax(coh_linescale_mat(1:end-1,:,:,:,:))))))];
 c_diff=[nanmin(nanmin(nanmin(nanmin(nanmin(coh_linescale_mat(end,:,:,:,:)))))) nanmax(nanmax(nanmax(nanmax(nanmax(coh_linescale_mat(end,:,:,:,:))))))];
+
+%chan_cohlims=[minx(coh_linescale_mat(1:end-1,:,1:end-1,:,:),5),maxx(coh_linescale_mat(1:end-1,:,1:end-1,:,:),5)];
 clear_plotassistvars
 
 %% image coherence as a topoplot based on seeds
@@ -776,10 +809,10 @@ end
 %% plot per-subject lines of the shape of results for a certain measure across conditions (ERPCOH)
 
 %chosen_pair=[5 7 8 12 36 37 41]
-chosen_pair=8;
-win_t=[200 400];
+chosen_pair=62; %10; 
+win_t=[160 180];
 %win_t=[200 300];
-win_f=[4 5.3]; %[4 5.3];
+win_f=[3.5 4.2]; %[4 5.3];
 
 colorkey={'r','g','b','m','k','c'};
 sitekey={'UConn','Indiana','Iowa','SUNY','WashU','UCSD'};

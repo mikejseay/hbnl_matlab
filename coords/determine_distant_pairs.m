@@ -1,5 +1,5 @@
 function pair_subset=determine_distant_pairs(coords_filepath,exclude_logic, ...
-    distance_spec,orientation_spec,edges_per_chan,direction_spec)
+    distance_spec,orientation_spec,edges_per_chan,do_plot)
 
 % determine pairs of electrodes for coherence analyses.
 
@@ -19,10 +19,12 @@ function pair_subset=determine_distant_pairs(coords_filepath,exclude_logic, ...
         
     %orientation_spec indicates orientation of electrodes to examine like
     %so:
-        % 1 = all pairs regardless of orientation
-        % 2 = vertical/horizontal pairs (nearly anterior-posterior or
+        % 'all' = all pairs regardless of orientation
+        % 'ap' = anterior-posterior oriented pairs
+        % 'lr' = left-right oriented pairs
+        % 'aplr' = vertical and horizontal pairs (nearly anterior-posterior or
         %left-right)
-        % 3 = diagonal pairs
+        % 'diag' = diagonal pairs
         
     %edges_per_chan indicates how many edges you desire per channel
         
@@ -83,6 +85,7 @@ for pair=1:n_pairs
     pair_distance(pair) = sqrt( x_dist^2 + y_dist^2 + z_dist^2 );
 end
 
+if length(distance_spec)==1
 
 %determine subsets by distance
 mean_distance = mean(pair_distance);
@@ -101,6 +104,11 @@ switch distance_spec
         distance_inds = pair_distance > mean_distance + std_distance;
 end
 
+elseif length(distance_spec)==2
+    distance_spec = distance_spec / 10; %convert from cm to dm
+    distance_inds = pair_distance > distance_spec(1) & pair_distance < distance_spec(2);
+end
+
 %take distance subset
 pair_subset = pairs(distance_inds,:);
 n_chosen_pairs = size(pair_subset,1);
@@ -117,13 +125,19 @@ end
 
 %take the subset of nearly a-p oriented pairs
 oriented_inds = distant_pair_angle < -1.26 | ( distant_pair_angle > -0.314 & distant_pair_angle < 0.314 ) | distant_pair_angle > 1.26 ;
+ap_inds = distant_pair_angle < -1.26 | distant_pair_angle > 1.26 ;
+lr_inds = distant_pair_angle > -0.314 & distant_pair_angle < 0.314;
 %take the subset of non-nearly a-p or l-r oriented pairs
 non_oriented_inds = ~oriented_inds;
 switch orientation_spec
-    case 1 %do nothing, take all pairs regardless of orientation
-    case 2 %take the a-p or l-r oriented pairs
+    case 'all' %do nothing, take all pairs regardless of orientation
+    case 'ap'
+        pair_subset = pair_subset(ap_inds,:);
+    case 'lr'
+        pair_subset = pair_subset(lr_inds,:);
+    case 'aplr' %take the a-p or l-r oriented pairs
         pair_subset = pair_subset(oriented_inds,:);
-    case 3 %take the diagonally-oriented pairs
+    case 'diag' %take the diagonally-oriented pairs
         pair_subset = pair_subset(non_oriented_inds,:);
 end
 
@@ -158,41 +172,10 @@ end
 end
 
 %%
-n_chosen_pairs=1:size(pair_subset,1);
-%assign them colors
-%n_chosen_pairs=31:60;
-distant_pair_colors=distinguishable_colors(length(n_chosen_pairs));
-%n_chosen_pairs=31:60;
 
-if false
+if do_plot
 
-%plot them as arcs on a head
-dummy_data=zeros(length(chan_locs),1);
-figure; topoplot(dummy_data,chan_locs,'style','blank'); hold on;
-for chosen_pair=n_chosen_pairs
-    %define [x1 x2], [y1 y2]
-    x=[chan_locs(pair_subset(chosen_pair,1)).topo_x chan_locs(pair_subset(chosen_pair,2)).topo_x];
-    y=[chan_locs(pair_subset(chosen_pair,1)).topo_y chan_locs(pair_subset(chosen_pair,2)).topo_y];
-    %determine the direction
-    switch direction_spec
-        case 1
-            direction=1;
-        case 2
-            direction=mod(chosen_pair,2);
-        case 3
-            direction=mod(mod(chosen_pair,3),2);
-    end
-    %plot the arc
-    arc_h(chosen_pair)=Draw_Arc_Clockwise([x(1),y(1)], [x(2),y(2)], distant_pair_colors(chosen_pair,:), 3, direction); hold on;
-end
-
-%make labels
-p_label=cell(length(n_chosen_pairs),1);
-for pair=n_chosen_pairs
-    p_label{pair}=[chan_locs(pair_subset(pair,1)).labels,'-',chan_locs(pair_subset(pair,2)).labels];
-end
-
-clickableLegend(arc_h,{p_label{n_chosen_pairs}})
+plot_pairs(pair_subset,chan_locs,1);
 
 end
 

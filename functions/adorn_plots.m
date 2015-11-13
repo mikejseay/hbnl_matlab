@@ -17,7 +17,7 @@ end
 end
 
 if true
-if subplot_dims(2) > 5 %if we're probably plotting time windows
+if false %if we're probably plotting time windows
     n_cols = subplot_dims(2) - 1; %skip the last (we get it)
 else
     n_cols = subplot_dims(2);
@@ -28,7 +28,8 @@ end
 
 if ~isempty(column_labels)
 for column=1:n_cols
-    subplot(subplot_dims(1),subplot_dims(2),(subplot_dims(1)-1)*subplot_dims(2)+column);
+    %subplot(subplot_dims(1),subplot_dims(2),(subplot_dims(1)-1)*subplot_dims(2)+column);
+    subplot(subplot_dims(1),subplot_dims(2),column);
     %if column==n_cols
     %    colorbar;
     %end

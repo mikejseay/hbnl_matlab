@@ -1,27 +1,15 @@
+function [erpdata,peakmat] = coh_pickERPpeaks (imp, scl, s_inds_g, erpdata)
 % pick peaks in erpdata
 
-%% filter (run only once)
+% filter
+erpdata=filter_erpdata(erpdata,imp.timerate);
 
-if true
-
-erpdata=filter_erpdata(erpdata,param_struct.timerate);
-
-%erpdata=filter_erp_datastruct(erpdata,param_struct.rate, ...
-%    filter_lowpass);
-
-end
-
-%% baseline (run only once)
-
-if true
-
+% baseline
 baseline_window_ms=[-100 0];
 erpdata=baseline_erp_datastruct(erpdata,scl.t_ms, ...
     baseline_window_ms);
 
-end
-
-%% look at peaks
+% pick peaks
 
 %specify chan
 peakchan=7;
@@ -31,16 +19,15 @@ pkwin_s_ms=250;
 pkwin_e_ms=550;
 
 %pause for quality control?
-%dopause=false;
 dopause=false;
 
 % P3
 [~,pkwin_s]=min(abs(scl.t_ms-pkwin_s_ms));
 [~,pkwin_e]=min(abs(scl.t_ms-pkwin_e_ms));
 peakmat=zeros(size(s_inds_g,1),imp.maxconds,2);
-f=figure;
+%f=figure;
 for s=1:size(s_inds_g,1)
-if s_inds_g(s,9)
+if s_inds_g(s,1)
 subplot_dummy=0;
 for cond=1:imp.maxconds
     erp_plot_data=erpdata(:,peakchan,cond,s);
@@ -69,11 +56,9 @@ end
 if dopause
     pause
 end
-clf
+%clf
 end
 end
-close(f)
+%close(f)
 
-clear bl_s_ms bl_e_ms bl_s bl_e chan cond s peakchan pkwin_s_ms pkwin_e_ms ...
-    dopause pkwin_s pkwin_e f erp_plot_data ind val subplot_dummy ...
-    baseline_window_ms filter_lowpass
+end
