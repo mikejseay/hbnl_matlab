@@ -204,6 +204,83 @@ for fig=pp.figdum_init+1:pp.figdum
 end
 clear_plotassistvars
 
+%% image coherence in time-freq among a relational hypothesis' pairs
+
+sp_rowlabel={''};
+sp_columnlabel=scl.cond_label;
+x_plotlabel='Time (ms)';
+y_plotlabel='Frequency (Hz)';
+
+% a custom index-fixing procedure for the 92 pairs, to reduce them to have
+% a similar number of pairs to the other hypotheses
+hyp_inds([39 42 45 46 51 52 61 64 73 74])=NaN;
+%hyp_inds([39 42 45 46 51 52])=4;
+%hyp_inds([61 64 73 74])=5;
+
+%pp.figdum_init=pp.figdum;
+pp.figdum=pp.figdum_init;
+v=zeros(length(pp.chosen_g),6,length(pp.plotn_cond),2);
+for group=pp.chosen_g(pp.plotn_g)
+for hyp=4:6
+    pp.figdum=pp.figdum+1;
+    figure(pp.figdum); subplot_dummy=0; 
+    overtitle{pp.figdum}=sprintf('%s / %s',hyp_indlbls{hyp},scl.g_label{group});
+    plot_hypinds=find(hyp_inds==hyp);
+    for cond=pp.plotn_cond
+        subplot_dummy=subplot_dummy+1;
+        subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy)
+        if cond==imp.maxconds+1
+            coh_tf_data=meanx(cohdata(:,:,pp.cond_diff{1},plot_hypinds,s_inds_g(:,group)),[1 2]) - ...
+                meanx(cohdata(:,:,pp.cond_diff{2},plot_hypinds,s_inds_g(:,group)),[1 2]);
+        else
+            coh_tf_data=meanx(cohdata(:,:,cond,plot_hypinds,s_inds_g(:,group)),[1 2]);
+        end
+        [~,h]=contourf(fliplr(coh_tf_data)',pp.n_contour);
+        set(h,'EdgeColor','None');
+        axis([scl.t_start scl.t_end 1 imp.maxfreqs]);
+        v(group, hyp, subplot_dummy,:) = caxis;
+        set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); %xlabel('Time (ms)');
+        set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); %ylabel('Frequency (Hz)');
+        grid on; set(gca,'Layer','Top');
+        hold on; plot(ones(imp.maxfreqs,1)*scl.t_zero,linspace(1,imp.maxfreqs,imp.maxfreqs),'k--'); hold off;
+    end
+    adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,pp.sp_d);    
+end
+end
+v(v==0)=NaN;
+c(1)=nanmin(nanmin(nanmin(v(:,:,1:end-1,1)))); c(2)=nanmax(nanmax(nanmax(v(:,:,1:end-1,2))));
+c_diff(1)=nanmin(nanmin(nanmin(v(:,:,end,1)))); c_diff(2)=nanmax(nanmax(nanmax(v(:,:,end,2))));
+cmap=makecmap(c);
+%cmap=parula(256);
+cmap_diff=makecmap(c_diff);
+for fig=pp.figdum_init+1:pp.figdum
+    figure(fig);
+    set(gcf,'position',[0 120 1200 400]);
+    for splot=1:subplot_dummy
+        temp_s=subplot(pp.sp_d(1),pp.sp_d(2),splot);
+        if splot==subplot_dummy
+            caxis([c_diff(1) c_diff(2)]);
+            
+            colormap(temp_s,cmap_diff);
+        else
+            caxis([c(1) c(2)]);
+            colormap(temp_s,cmap);
+        end
+    end
+    set_print_size(20,8);
+    plottitle(overtitle{fig});
+end
+%make color bars separately
+cb_pos=[0.25 0.1 0.05 0.8];
+figure;
+h=colorscale([1 256], c_diff, range(c_diff)/5, 'vert','Position',cb_pos);
+colormap(h,cmap_diff);
+cb_pos=[0.75 0.1 0.05 0.8];
+h=colorscale([1 256], c, range(c)/5, 'vert','Position',cb_pos);
+colormap(h,cmap);
+%
+clear_plotassistvars
+
 %% SCATTER ERPCOH WITH AGE
 
 sp_rowlabel={scl.cond_label{pp.plotn_cond}};
@@ -261,6 +338,69 @@ end
 clear_plotassistvars
 
 %% ERPCOH - create condition bar plots with error bars
+
+sp_rowlabel=make_freqlabels(pp.f_start_hz(pp.plotn_f),pp.f_end_hz(pp.plotn_f));
+sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
+x_plotlabel='Group Condition-Means';
+y_plotlabel='Phase Coherence';
+
+width=[];
+bw_xlabel=[];
+bw_ylabel=[];
+bw_colormap=bone; %pmkmp(length(barvalues),'cubicl');
+gridstatus='y';
+error_sides=1;
+legend_type='plot';
+bar_glabel={scl.g_label{pp.chosen_g(pp.plotn_g)}};
+%bar_condlabel={'Go','NoGo'};
+bar_condlabel={scl.cond_label{pp.plotn_cond(1:end-1)}};
+
+%figures are chans, columns are time windows, rows are frequency bands
+for pair=pp.chosen_p(pp.plotn_p)
+figure;
+subplot_dummy=0;
+overtitle=scl.p_label{pair};
+for freq_range=pp.plotn_f
+    [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
+    [~,f_end]=min(abs(scl.freqs-pp.f_end_hz(freq_range)));
+    for win=1:length(pp.t_start_ms)
+        [~,t_start]=min(abs(scl.t_ms-pp.t_start_ms(win)));
+        [~,t_end]=min(abs(scl.t_ms-pp.t_end_ms(win)));
+        subplot_dummy=subplot_dummy+1;
+        subplot(length(pp.plotn_f),pp.maxwin,subplot_dummy); %length(pp.f_start_hz),pp.maxwin,subplot_dummy);
+        %
+        gdum=0;
+        for group=pp.chosen_g(pp.plotn_g)
+        gdum=gdum+1;
+        ranova_data{gdum}=squeeze(mean(mean(cohdata(t_start:t_end,f_end:f_start,pp.plotn_cond(1:end-1),pair,s_inds_g(:,group)),1),2))';
+        bar_data(group,:)=squeeze(mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,pp.plotn_cond(1:end-1),pair,s_inds_g(:,group)),1),2),5));
+        %bar_data(group,:)=squeeze(mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,:,pair,s_inds_g(:,group)),1),2),5) -...
+        %    mean(mean(mean(cohdata(1:scl.t_zero,f_end:f_start,:,pair,s_inds_g(:,group)),1),2),5));
+        bar_data_se(group,:)=std(squeeze(mean(mean(cohdata(t_start:t_end,f_end:f_start,pp.plotn_cond(1:end-1),pair,s_inds_g(:,group)),1),2)),0,2)/sqrt(sum(s_inds_g(:,group)));
+        %bar_data_se(group,:)=std(squeeze(mean(mean(cohdata(t_start:t_end,f_end:f_start,:,pair,s_inds_g(:,group)),1),2) -...
+        %    mean(mean(cohdata(1:scl.t_zero,f_end:f_start,:,pair,s_inds_g(:,group)),1),2)),0,2)/sqrt(sum(s_inds_g(:,group)));
+        %
+        end
+        %bar_title=sprintf('%s, %1.1f - %1.1f, %d - %d ms',scl.p_label{pair},...
+        %    pp.f_start_hz(freq_range),pp.f_end_hz(freq_range),pp.t_start_ms(win),pp.t_end_ms(win));
+        bar_title=[];
+        bar_h=barweb(bar_data(pp.chosen_g,:),bar_data_se(pp.chosen_g,:),width,bar_glabel,...
+            bar_title,bw_xlabel,bw_ylabel,bw_colormap,gridstatus,bar_condlabel,error_sides,legend_type);
+        axis 'auto y'
+        axis([0 4 0.2 .6])
+        [p,ranova_table]=anova_rm(ranova_data,'off');
+        text(2.5,0.35,sprintf('main p=%1.3f',p(1)))
+        text(2.5,0.28,sprintf('group p=%1.3f',p(2)))
+        %text(2.5,0.21,sprintf('int p=%1.3f',p(3)))
+    end
+end
+adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,[length(pp.plotn_f),pp.maxwin]);
+end
+%linkaxes
+%tightfig;
+clear_plotassistvars
+
+%% ERPCOH with pair hypotheses (intra/inter-regional) as BAR PLOT
 
 sp_rowlabel=make_freqlabels(pp.f_start_hz(pp.plotn_f),pp.f_end_hz(pp.plotn_f));
 sp_columnlabel=make_timelabels(pp.t_start_ms,pp.t_end_ms);
@@ -464,7 +604,7 @@ linescale=[1,256];
 %choose pair sub-set
 cbar_ticks=5;
 
-line_limit=[0 1];
+%line_limit=[-1 1];
 %line_limit_diff=[-.5 .5];
 %
 %line_limit=[-.04 .13]; %delta 2-3.5 Hz (1) @ alpha = .01
@@ -483,12 +623,15 @@ line_limit=[0 1];
 %line_limit_diff=[-.09 .12];
 
 %line_limit=[-.04 .17]; %thetas_compat
-line_limit_diff=[-.08 .12];
+%line_limit_diff=[-.08 .12];
+
+line_limit=[-.02 .18]; %4-6 Hz
+line_limit_diff=[-.07 .1];
 
 cmap=makecmap(line_limit);
 cmap_diff=makecmap(line_limit_diff);
 
-alpha=.001;
+alpha=.01;
 plot_sig=true;
 
 coh_linescale_mat=zeros(length(pp.plotn_cond),length(pp.chosen_g),length(pp.t_start_ms),length(pp.plotn_f),imp.maxpairs);
@@ -499,7 +642,7 @@ pp.figdum=pp.figdum_init;
 for group=pp.chosen_g(pp.plotn_g)
     gdum2=gdum2+1;
     fdum=0;
-for freq_range=pp.plotn_f
+for freq_range=10 %pp.plotn_f
     fdum=fdum+1;
     %convert scl.freqs to points
     [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
@@ -524,10 +667,10 @@ for cond=pp.plotn_cond
                 ranova_data{gdum}=squeeze(mean(mean(cohdata(t_start:t_end,f_end:f_start,:,pair,s_inds_g(:,statsgroup)),1),2))';
             end
             [p,~]=anova_rm(ranova_data,'off');
-            if ~any(p([1:2,4])<alpha)
+            %if ~any(p([1:2,4])<alpha)
             %if p(1)>alpha
             %if p(2)>alpha
-            %if p(4)>alpha
+            if p(4)>alpha
                 continue
             end
             end
@@ -547,10 +690,10 @@ for cond=pp.plotn_cond
                 linealpha=norm2limits(paircoh_for_linecolor,line_limit_diff);
             else
                 %paircoh_for_linecolor=mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5);
-                paircoh_for_linecolor=norm2limits( mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5), ...
-                    chan_cohlims(pair,:) );
-                %paircoh_for_linecolor=mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5) -...
-                %    mean(mean(mean(mean(cohdata(1:scl.t_zero,f_end:f_start,:,pair,s_inds_g(:,group)),1),2),3),5); %subtract (common) baseline
+                %paircoh_for_linecolor=norm2limits( mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5), ...
+                %    chan_cohlims(pair,:) );
+                paircoh_for_linecolor=mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5) -...
+                    mean(mean(mean(mean(cohdata(1:scl.t_zero,f_end:f_start,:,pair,s_inds_g(:,group)),1),2),3),5); %subtract (common) baseline
                 %paircoh_for_linecolor=mean(mean(mean(cohdata(t_start:t_end,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5) -...
                 %    mean(mean(mean(cohdata(scl.t_zero+1:imp.maxtimepts,f_end:f_start,cond,pair,s_inds_g(:,group)),1),2),5);
                 %    %subtract post-stim coherence??
@@ -558,10 +701,10 @@ for cond=pp.plotn_cond
                 paircoh_color=(paircoh_for_linecolor-line_limit(1))/(line_limit(2) - line_limit(1))*(linescale(2)-1);
                 paircoh_color = ceil(paircoh_color)+1;
                 linecolor=cmap(paircoh_color,:);
-                %linesize=norm2limits(paircoh_for_linecolor,line_limit)*5;
-                linesize=(paircoh_for_linecolor+eps)*5;
-                %linealpha=norm2limits(paircoh_for_linecolor,line_limit);
-                linealpha=paircoh_for_linecolor;
+                linesize=norm2limits(paircoh_for_linecolor,line_limit)*5;
+                %linesize=(paircoh_for_linecolor+eps)*5;
+                linealpha=norm2limits(paircoh_for_linecolor,line_limit);
+                %linealpha=paircoh_for_linecolor;
             end
             %store color for scaling
             %scale post hoc

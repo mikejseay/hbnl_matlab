@@ -38,8 +38,8 @@ for ev=1:n_events
         trial_count=trial_count+1;
     end
     trial(ev)=trial_count;
-    if type(ev)==0
-        if ev>1
+    if type(ev)==0  %some kind of response
+        if ev>1     %this part catches errant responses
             if isempty(response_id(stim_id==type(ev-1))) || ...
                     response_id(stim_id==type(ev-1))==0
                 type_descriptor{ev}='Errant Response';
@@ -48,7 +48,7 @@ for ev=1:n_events
             end
         end
         type_descriptor{ev}='Response';
-    else
+    else            %some kind of stimulus
         if ismember(type(ev),stim_id)
             type_descriptor{ev}=descriptor{stim_id==type(ev)};
         else

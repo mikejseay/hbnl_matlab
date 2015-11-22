@@ -48,7 +48,7 @@ for ev=1:n_events
         trial_dum=trial_dum+1;
     end
     
-    %if a valid response
+    %if a valid response (RT = [100,1000])
     if ismember(etable.response_code(ev),resp_codes) && etable.errant_response(ev)==0 && ...
             ( etable.rt(ev) > 99 && etable.rt(ev) < 1001)
         

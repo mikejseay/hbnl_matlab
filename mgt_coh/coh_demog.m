@@ -1,8 +1,8 @@
-function [scl, s_inds_g, s_demogs] = coh_demog(mat_list, imp, scl, n_trials_all, demogsfile)
+function [scl, s_inds_g, s_demogs] = coh_demog(mat_list, imp, scl, n_trials_all, demogsfile, trials_necessary, custom_rej)
 % index-match demographic information to eeg data matrices
 
 % first reject subjects based on number of trials per condition
-s_inds = coh_reject (imp, n_trials_all);
+s_inds = coh_reject (imp, n_trials_all, trials_necessary, custom_rej);
 
 % create demographic columns corresponding to the mat_list
 s_inds_g=false(length(s_inds),3);

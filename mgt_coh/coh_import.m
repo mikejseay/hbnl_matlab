@@ -1,5 +1,5 @@
-function [mat_list, imp, n_trials_all, erpdata, wave_evkdata, wave_totdata, cohdata, itcdata, behdata] = ...
-    coh_import(opt, demogsfile, time_downsamp, behmat_path)
+function [mat_list, imp, n_trials_all, erpdata, wave_evkdata, wave_totdata, cohdata, itcdata, behdata, wave_evknormdata] = ...
+    coh_import(opt, demogsfile, time_downsamp, behmat_path) %wave_evknorm
 % Imports computed EEG measures into the MATLAB workspace for freestyle
 % plotting and exploration.
 
@@ -25,6 +25,15 @@ ns=length(mat_list);
 %size of data dimensions, taking into account a time-downsampling factor
 maxtimepts=round((opt.n_samps)/time_downsamp);
 times2import=1:time_downsamp:maxtimepts*time_downsamp;
+
+if isfield(opt,'tf_timedownsamp_ratio')
+    if opt.tf_timedownsamp_ratio==time_downsamp
+        tftimes2import=1:maxtimepts;
+    else
+        tftimes2import=times2import;
+    end
+end
+
 timerate=opt.rate/time_downsamp;
 
 maxfreqs=length(opt.wavelet_scales);
@@ -33,14 +42,18 @@ maxchans=length(opt.chan_vec);
 maxpairs=size(opt.coherence_pairs,1);
 
 %indicate mats to load
-n_datatypes=min(nargout-2, 5);
+n_datatypes=min(nargout-2, 5); %6
 datatype_names={'n_trials','erp','wave_evk','wave_tot','coh'};
 datatypes={datatype_names{1:n_datatypes}};
+if nargout>=10
+    datatypes{end+1}='wave_evknorm';
+end
 
 %pre-allocate vars
 n_trials_all=zeros(maxconds,ns);
 erpdata=zeros(maxtimepts,maxchans,maxconds,ns);
 wave_evkdata=zeros(maxtimepts,maxchans,maxfreqs,maxconds,ns);
+wave_evknormdata=zeros(maxtimepts,maxchans,maxfreqs,maxconds,ns);
 wave_totdata=zeros(maxtimepts,maxchans,maxfreqs,maxconds,ns);
 cohdata=zeros(maxtimepts,maxfreqs,maxconds,maxpairs,ns);
 cohstats=zeros(maxtimepts,maxfreqs,maxconds,maxpairs,2);
@@ -66,10 +79,10 @@ if exist('behav_data','var')
 end
 if exist('coh','var')
 if iscell(coh)
-    cohdata(:,:,:,:,s_valid)=abs(coh{1}(times2import,:,:,:));
-    cohstats(:,:,:,:,s_valid)=coh{2}(times2import,:,:,:);
+    cohdata(:,:,:,:,s_valid)=abs(coh{1}(ttfimes2import,:,:,:));
+    cohstats(:,:,:,:,s_valid)=coh{2}(tftimes2import,:,:,:);
 else
-    cohdata(:,:,:,:,s_valid)=abs(coh(times2import,:,:,:));
+    cohdata(:,:,:,:,s_valid)=abs(coh(tftimes2import,:,:,:));
 end
 end
 if exist('n_trials','var')
@@ -79,8 +92,13 @@ if exist('erp','var')
 erpdata(:,:,:,s_valid)=erp(times2import,1:maxchans,:);
 end
 if exist('wave_evk','var')
-wave_evkdata(:,:,:,:,s_valid)=wave_evk(times2import,1:maxchans,:,:);
-wave_totdata(:,:,:,:,s_valid)=wave_tot(times2import,1:maxchans,:,:);
+wave_evkdata(:,:,:,:,s_valid)=wave_evk(tftimes2import,1:maxchans,:,:);
+end
+if exist('wave_evknorm','var')
+wave_evknormdata(:,:,:,:,s_valid)=abs(wave_evknorm(tftimes2import,1:maxchans,:,:));
+end
+if exist('wave_tot','var')
+wave_totdata(:,:,:,:,s_valid)=wave_tot(tftimes2import,1:maxchans,:,:);
 end
 fprintf(num2str(s_attempt))
 if mod(s_attempt,20)==0

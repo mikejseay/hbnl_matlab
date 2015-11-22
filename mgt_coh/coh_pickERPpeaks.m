@@ -1,8 +1,8 @@
-function [erpdata,peakmat] = coh_pickERPpeaks (imp, scl, s_inds_g, erpdata)
+function [erpdata,peakmat] = coh_pickERPpeaks (imp, scl, s_inds_g, erpdata, lp_cutoff)
 % pick peaks in erpdata
 
 % filter
-erpdata=filter_erpdata(erpdata,imp.timerate);
+erpdata=filter_erpdata(erpdata,imp.timerate,lp_cutoff);
 
 % baseline
 baseline_window_ms=[-100 0];

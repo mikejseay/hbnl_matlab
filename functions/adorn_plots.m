@@ -27,7 +27,7 @@ else
 end
 
 if ~isempty(column_labels)
-for column=1:n_cols
+for column=1:n_cols-1
     %subplot(subplot_dims(1),subplot_dims(2),(subplot_dims(1)-1)*subplot_dims(2)+column);
     subplot(subplot_dims(1),subplot_dims(2),column);
     %if column==n_cols

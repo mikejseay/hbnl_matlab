@@ -1,4 +1,4 @@
-function pp = coh_plotparams(imp,scl)
+function [scl, pp] = coh_plotparams(imp,scl)
 % set certain plotting parameters for coh_analysis
 
 cond_diff={[2],[1]}; %[6],[7]};
@@ -23,17 +23,17 @@ chosen_cond=1;
 
 
 if ~exist('tfparams','var')
-f_start_hz=[2.9, 3.6, 4.6, 6.4, 8,    4];     %lower edges
-f_end_hz=[  3.2, 5.3, 6.4, 8,   12.8, 5.3];  %upper edges
-f_indiv_hz=[3.2, 4.6, 5.3, 7.1, 10.7, 4.6]; %indiv bands
+%f_start_hz=[2.9, 3.6, 4.6, 6.4, 8,    4];     %lower edges
+%f_end_hz=[  3.2, 5.3, 6.4, 8,   12.8, 5.3];  %upper edges
+%f_indiv_hz=[3.2, 4.6, 5.3, 7.1, 10.7, 4.6]; %indiv bands
 
 %f_start_hz=[2,   3.8, 5.5, 8,    14,   27  ];     %lower edges
 %f_end_hz=[  3.5, 5,   7.3, 13,   24,   32  ];  %upper edges
 %f_indiv_hz=[2.6, 4.2, 6.1, 9.7,  18.3, 28.4 ]; %indiv bands
 
-%f_start_hz=[2,   3.5, 4.2, 5.5,  8,    14,   27, 3, 5];     %lower edges
-%f_end_hz=[  3.2, 4.2, 5,   7.3,  13,   24,   32, 5, 7];  %upper edges
-%f_indiv_hz=[2.6, 3.9, 6.1, 4.6,  10,  18, 28,    4, 6]; %indiv bands
+f_start_hz=[2,   3.5, 4.2, 5.5,  8,    14,   27, 3, 5, 4];     %lower edges
+f_end_hz=[  3.2, 4.2, 5,   7.3,  13,   24,   32, 5, 7, 6];  %upper edges
+f_indiv_hz=[2.6, 3.9, 4.6, 6.1,  10,  18, 28,    4, 6, 5]; %indiv bands
 else
 f_start_hz=[2, 3, 5, 8,  13];   %lower edges
 f_end_hz=[  2, 5, 7, 12, 24];   %upper edges
