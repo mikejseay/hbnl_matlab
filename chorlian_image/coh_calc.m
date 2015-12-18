@@ -156,7 +156,7 @@ if ~exist(cleanfile_path,'file')
         if opt.vis
             %visualize with trimoutlier
             [EEG,h] = pop_trimOutlierPlot(EEG);
-            export_fig([subj_ckpath,name,'_1raw'],'-png');
+            print([subj_ckpath,name,'_1raw'],'-dpng');
             close(h)
         
             % high-pass filter at 1 Hz and visualize again (not used
@@ -164,7 +164,7 @@ if ~exist(cleanfile_path,'file')
         
             %visualize with trimoutlier
             [EEG2,h] = pop_trimOutlierPlot(EEG2);
-            export_fig([subj_ckpath,name,'_2hpf'],'-png');
+            print([subj_ckpath,name,'_2hpf'],'-dpng');
             close(h)
         end
         
@@ -185,7 +185,7 @@ if ~exist(cleanfile_path,'file')
         if opt.vis
             %visualize with trimoutlier
             [EEG,h] = pop_trimOutlierPlot(EEG);
-            export_fig([subj_ckpath,name,'_3asr'],'-png');
+            print([subj_ckpath,name,'_3asr'],'-dpng');
             close(h)
         end
         
@@ -223,7 +223,7 @@ if ~exist(cleanfile_path,'file')
     if opt.vis
         EEG=import_hdf_eeglab_inline(data_file,dataR,h1_struct);
         [EEG,h] = pop_trimOutlierPlot(EEG);
-        export_fig([subj_ckpath,name,'_4'],'-png');
+        print([subj_ckpath,name,'_4'],'-dpng');
         close(h)
         clear EEG
     end
@@ -248,7 +248,15 @@ end
 
 % do wavelet calcuation
 n_scales = numel(opt.wavelet_scales);
-dataW = wavelet_calc(dataR, opt.wavelet_scales);
+if isfield(opt, 'wavelet_type') && isfield(opt, 'cycle_edges')
+    if strcmpi(opt.wavelet_type,'lin_cycles') && length(opt.cycle_edges)==2
+        dataW = wavelet_calc2(dataR, opt.wavelet_scales, opt.rate, opt.cycle_edges);
+    else
+        dataW = wavelet_calc(dataR, opt.wavelet_scales);
+    end
+else
+    dataW = wavelet_calc(dataR, opt.wavelet_scales);
+end
 
 if is_mc_bin
     dataW = reshape(dataW, [n_samps, n_trials, n_chans, n_scales]);
@@ -380,20 +388,26 @@ n_tfsamps = ceil( n_samps / ds_rate );
 %put the data into nice matrices
 mean_data = zeros(n_samps, n_chans, n_cases);
 wavelet_evk = zeros(n_tfsamps, n_chans, n_scales, n_cases);
-wavelet_tot = zeros(n_tfsamps, n_chans, n_scales, n_cases);
 wavelet_evknorm = zeros(n_tfsamps, n_chans, n_scales, n_cases);
+wavelet_tot = zeros(n_tfsamps, n_chans, n_scales, n_cases);
+wavelet_totpow = zeros(n_tfsamps, n_chans, n_scales, n_cases);
 
 for m = 1:n_cases
-    mean_data(:, :, m) = squeeze(mean(dataR(:, trial_mat(:, m), :), 2));
-    % keep phase info
+    mean_data(:, :, m) = squeeze(mean(dataR(:, trial_mat(:, m), :), 2)); %erps
     wavelet_evk(:, :, :, m) = ...
-        squeeze(mean(dataW(1:ds_rate:end, trial_mat(:, m), :, :), 2));
-    wavelet_evknorm(:,:,:,m) = squeeze(mean( ...
+        squeeze(mean(dataW(1:ds_rate:end, trial_mat(:, m), :, :), 2)); %weighted phase
+    wavelet_evknorm(:,:,:,m) = squeeze(mean( ... %normalized phase
         dataW(1:ds_rate:end, trial_mat(:, m), :, :) ./ ...
         abs(dataW(1:ds_rate:end, trial_mat(:, m), :, :)), 2));
-    wavelet_tot(:, :, :, m) = ...
+    wavelet_tot(:, :, :, m) = ... %amplitude
         squeeze(mean(abs(dataW(1:ds_rate:end, trial_mat(:, m), :, :)), 2));
+    %wavelet_totpow(:, :, :, m) = ... %power
+    %    squeeze(mean(abs(dataW(1:ds_rate:end, trial_mat(:, m), :, :)).^2, 2)); %square to give power (uV^2)
+    wavelet_totpow(:, :, :, m) = ... %power
+        squeeze(mean(dataW(1:ds_rate:end, trial_mat(:, m), :, :).* ...
+        conj(dataW(1:ds_rate:end, trial_mat(:, m), :, :)), 2)); % this is a faster abs().^2
 end
+
 if any(ismember(opt.measures,'wave_evk'))
     Y.wave_evk = wavelet_evk;
 end
@@ -403,9 +417,13 @@ end
 if any(ismember(opt.measures,'wave_tot'))
     Y.wave_tot = wavelet_tot;
 end
+if any(ismember(opt.measures,'wave_totpow'))
+    Y.wave_totpow = wavelet_totpow;
+end
 if any(ismember(opt.measures,'erptrial'))
     Y.erptrial = dataR;
 end
+
 Y.erp = mean_data;
 Y.trials = trial_mat;
 Y.n_trials = sum(trial_mat);

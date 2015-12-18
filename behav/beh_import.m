@@ -1,8 +1,10 @@
 function behdata=beh_import(behmat_path,mat_list)
-%  mobilize behavioral data into better matrices
+% import behavioral data from a folder of .mat's, each containing a structure
+% called 'behav_data'
+
+% written by michael seay, hbnl, 2015
 
 behmat_list=coh_updatemats(behmat_path);
-
 behmat_list=match_uniqids(behmat_list,mat_list);
 
 %declare number of subjects to look at
@@ -17,19 +19,13 @@ bad_s=zeros(ns,1);
 %load in data
 s_valid=0;
 for s_attempt=1:ns
-for datatype=1:length(datatypes)
-load(behmat_list{s_attempt},datatypes{datatype});
-end
-if exist('behav_data','var')
-    %if any(any(isnan(behav_data.respRT)))
-    %    bad_s(s_attempt)=1;
-    %    continue
-    %end
-end
-s_valid=s_valid+1;
-if exist('behav_data','var')
-    behdata(s_valid)=behav_data;
-end
+    for datatype=1:length(datatypes)
+        load(behmat_list{s_attempt},datatypes{datatype});
+    end
+    if exist('behav_data','var')
+        s_valid=s_valid+1;
+        behdata(s_valid)=behav_data;
+    end
 end
 fprintf('\n')
 

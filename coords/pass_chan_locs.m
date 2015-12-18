@@ -1,4 +1,7 @@
 function chan_locs=pass_chan_locs(chan_thing)
+% determines type of channel object and returns chan_locs structure
+
+% written by michael seay, hbnl, 2015
 
 if isscalar(chan_thing)
     %if coords spec is a number, load the file with that number of channels

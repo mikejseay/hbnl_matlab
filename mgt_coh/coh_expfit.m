@@ -15,6 +15,9 @@ params_mat=zeros(n_params,length(pp.plotn_f),length(s_inds));
 error_mat=zeros(length(pp.plotn_f),length(s_inds));
 estimates_mat=zeros(length(p_dists),length(pp.plotn_f),length(s_inds));
 
+%options = optimset('MaxFunEvals',1000);
+options = optimset('MaxFunEvals',[]);
+
 for s=s_inds
 for freq_range=pp.plotn_f
 
@@ -23,7 +26,7 @@ for freq_range=pp.plotn_f
 
     fitdata=meanx(cohdata(t_start:t_end,f_end:f_start,:,:,s),4);
 
-    [params_mat(:,freq_range,s),model]=exp_fit3(fitdata,p_dists);
+    [params_mat(:,freq_range,s),model]=exp_fit3(fitdata,p_dists,options);
     [error_mat(freq_range,s),estimates_mat(:,freq_range,s)]= ...
         model(params_mat(:,freq_range,s));
 
@@ -36,6 +39,7 @@ timeregion=[-500 -200];
 [~,t_start]=min(abs(scl.t_ms-timeregion(1)));
 [~,t_end]=min(abs(scl.t_ms-timeregion(2)));
 
+g_lab=char(s_demogs.group(s));
 subplot_dummy=0;
 for s=s_inds
 for freq_range=3 %pp.plotn_f
@@ -55,7 +59,10 @@ for freq_range=3 %pp.plotn_f
     
     scatter(p_dists,plotdata); hold on;
     plot(distance, model_line); hold off;
-
+    
+    text(.75*max(p_dists), .75, sprintf('%1.1f',error_mat(freq_range,s)));
+    
+    title(sprintf('S %d / %s',s,g_lab(1:3)));
 end
 end
 
@@ -69,7 +76,7 @@ timeregion=[200 500];
 
 subplot_dummy=0;
 for s=s_inds
-for freq_range=1 %pp.plotn_f
+for freq_range=1:2 %pp.plotn_f
     if mod(subplot_dummy,15)==0
         overtitle=sprintf('%d - %d ms / %1.1f - %1.1f Hz',timeregion(1), ...
             timeregion(2), pp.f_start_hz(freq_range), pp.f_end_hz(freq_range));
@@ -109,21 +116,25 @@ set_print_size(20,20/scl.phi);
 
 %% subject-mean fit with data cursor labels for pairs
 
+freqregion=[4 7];
+[~,f_start]=min(abs(scl.freqs-freqregion(1)));
+[~,f_end]=min(abs(scl.freqs-freqregion(2)));
+
+
 %fit
 timeregion=[-500 -200];
 [~,t_start]=min(abs(scl.t_ms-timeregion(1)));
 [~,t_end]=min(abs(scl.t_ms-timeregion(2)));
-freqregion=[4.2 5];
-[~,f_start]=min(abs(scl.freqs-freqregion(1)));
-[~,f_end]=min(abs(scl.freqs-freqregion(2)));
 
-fitdata=meanx(cohdata(t_start:t_end,f_end:f_start,:,:,s_inds_g(1,:)),4);
-[params,model]=exp_fit3(fitdata,p_dists);
+fitdata=meanx(cohdata(t_start:t_end,f_end:f_start,:,:,s_inds_g(:,1)),4);
+%fitdata=median(meanx(cohdata(t_start:t_end,f_end:f_start,:,:,s_inds_g(:,1)),[4 5]),2);
+[params,model]=exp_fit3(fitdata,p_dists,options);
 [error,estimates]=model(params);
 model_line=exp(params(1)+params(2)*distance)+params(3);
 
 %plot
-timeregion=[200 500];
+%timeregion=[200 500];
+timeregion=[-500 -200];
 [~,t_start]=min(abs(scl.t_ms-timeregion(1)));
 [~,t_end]=min(abs(scl.t_ms-timeregion(2)));
 plotdata=meanx(cohdata(t_start:t_end,f_end:f_start,:,:,s_inds_g(1,:)),4);
@@ -135,7 +146,8 @@ lookup=[p_dists,plotdata];
 f=figure;
 plot(distance, model_line); hold on;
 scatter(p_dists, plotdata); hold off;
-
+dcm_h=datacursormode(f);
+set(dcm_h,'UpdateFcn',@coh_pairlabel_dcm)
 
 %% subject-mean fit with separate colors for each hypothesis
 
@@ -143,32 +155,44 @@ timeregion=[-500 -200];
 [~,t_start]=min(abs(scl.t_ms-timeregion(1)));
 [~,t_end]=min(abs(scl.t_ms-timeregion(2)));
 
-hyps=length(hyp_indlbls);
+hyps=length(opt.pair_indlbls);
 hyp_colors=distinguishable_colors(hyps);
 
-for freq_range=3 %pp.plotn_f
+lookup=[];
+
+for freq_range=2 %pp.plotn_f
     
     [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
     [~,f_end]=min(abs(scl.freqs-pp.f_end_hz(freq_range)));
 
     plotdata=meanx(cohdata(t_start:t_end,f_end:f_start,:,:,s_inds_g(1,:)),4);
     
-    [params,model]=exp_fit3(plotdata,p_dists);
+    [params,model]=exp_fit3(plotdata,p_dists,options);
     [error,estimates]=model(params);
     model_line=exp(params(1)+params(2)*distance)+params(3);
 
     lookup=[p_dists,plotdata];
     
     f=figure;
+    overtitle=sprintf('%1.1f - %1.1f Hz, %d - %d ms',pp.f_start_hz(freq_range), ...
+        pp.f_end_hz(freq_range), timeregion(1), timeregion(2));
     
     for hyp=1:hyps
-        plot_hypinds=hyp_inds==hyp;
-        scatter(p_dists(plot_hypinds), plotdata(plot_hypinds),'MarkerEdgeColor',hyp_colors(hyp,:)); hold on;
+        plot_hypinds=opt.pair_inds==hyp;
+        scatter(p_dists(plot_hypinds), plotdata(plot_hypinds),'MarkerEdgeColor',hyp_colors(hyp,:));
+        hold on;
     end
+    legend(opt.pair_indlbls)
     plot(distance, model_line); hold off;
     axis([a-1 b+1 0 1]);
     dcm_h=datacursormode(f);
     set(dcm_h,'UpdateFcn',@coh_pairlabel_dcm)
+    
+    xlabel('Distance (cm)');
+    ylabel('ERPCOH');
+    
+    plottitle(overtitle);
+    
 end
 
 %% difference from fit in same way as above
@@ -198,10 +222,10 @@ set(dcm_h,'UpdateFcn',@coh_pairlabel_dcm)
 
 %basetimeregion=[
 
-timeregion=[200 500];
+timeregion=[200 400];
 [~,t_start]=min(abs(scl.t_ms-timeregion(1)));
 [~,t_end]=min(abs(scl.t_ms-timeregion(2)));
-freqregion=[2 3.2];
+freqregion=[4 7];
 [~,f_start]=min(abs(scl.freqs-freqregion(1)));
 [~,f_end]=min(abs(scl.freqs-freqregion(2)));
 
@@ -211,8 +235,8 @@ f=figure;
 overtitle=sprintf('%1.1f - %1.1f Hz',freqregion(1),freqregion(2));
 subplot_dummy=0;
 for group=pp.chosen_g(pp.plotn_g)
-subplot_dummy=subplot_dummy+1;
-subplot(1,2,subplot_dummy);
+%subplot_dummy=subplot_dummy+1;
+%subplot(1,2,subplot_dummy);
 plotdata=zeros(length(p_dists),2);
 sstyles={'gs','rs'};
 for cond=1:2
@@ -243,14 +267,14 @@ set_print_size(20,20/scl.phi);
 timeregion=[200 500];
 [~,t_start]=min(abs(scl.t_ms-timeregion(1)));
 [~,t_end]=min(abs(scl.t_ms-timeregion(2)));
-freqregion=[4 5.3];
+freqregion=[4 7];
 [~,f_start]=min(abs(scl.freqs-freqregion(1)));
 [~,f_end]=min(abs(scl.freqs-freqregion(2)));
 
 %lookup=[];
 
 subplot_dummy=0;
-for freq_range=6
+for freq_range=1:2
 for s=s_inds
 if mod(subplot_dummy,15)==0
     tightfig;
@@ -285,20 +309,20 @@ tightfig;
 %  to normalize each before taking the mean...
 % THIS SHOULD BE EXACT SAME AS 2 ABOVE
 
-timeregion=[200 400];
+timeregion=[200 500];
 [~,t_start]=min(abs(scl.t_ms-timeregion(1)));
 [~,t_end]=min(abs(scl.t_ms-timeregion(2)));
 
-for freq_range=1
+for freq_range=1:2
 f=figure;
 [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
 [~,f_end]=min(abs(scl.freqs-pp.f_end_hz(freq_range)));
 overtitle=sprintf('%1.1f - %1.1f Hz',pp.f_start_hz(freq_range), ...
     pp.f_end_hz(freq_range));
-subplot_dummy=0;
+%subplot_dummy=0;
 for group = pp.chosen_g(pp.plotn_g)
-subplot_dummy=subplot_dummy+1;
-subplot(1,2,subplot_dummy);
+%subplot_dummy=subplot_dummy+1;
+%subplot(1,2,subplot_dummy);
 plotdata=zeros(length(p_dists),2);
 sstyles={'gs','rs'};
 for cond=1:2
@@ -332,38 +356,99 @@ timeregion=[200 400];
 [~,t_start]=min(abs(scl.t_ms-timeregion(1)));
 [~,t_end]=min(abs(scl.t_ms-timeregion(2)));
 
-for freq_range=1
+hyp_colors=distinguishable_colors(length(opt.pair_indlbls),'g');
+clear overtitle;
+for freq_range=1:3
 f=figure;
 [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
 [~,f_end]=min(abs(scl.freqs-pp.f_end_hz(freq_range)));
-overtitle=sprintf('%1.1f - %1.1f Hz',pp.f_start_hz(freq_range), ...
-    pp.f_end_hz(freq_range));
-subplot_dummy=0;
+overtitle=sprintf('%1.1f - %1.1f Hz, %d - %d ms',pp.f_start_hz(freq_range), ...
+    pp.f_end_hz(freq_range), timeregion(1), timeregion(2));
+%subplot_dummy=0;
 for group = pp.chosen_g(pp.plotn_g)
-subplot_dummy=subplot_dummy+1;
-subplot(1,2,subplot_dummy);
+%subplot_dummy=subplot_dummy+1;
+%subplot(1,2,subplot_dummy);
 plotdata=zeros(length(p_dists),2);
 sstyles={'gs','rs'};
 for cond=1:2
     plotdata(:,cond)=mean( meanx(cohdata(t_start:t_end,f_end:f_start,cond,:,s_inds_g(:,group)),[4 5]) ./ ...
         squeeze(estimates_mat(:,freq_range,s_inds_g(:,group))) ,2);
-    %lookup=[lookup;p_dists,plotdata(:,cond) - estimates_mat(:,freq_range,s)];
+    lookup=[lookup;p_dists,plotdata(:,cond)];
     scatter(p_dists, plotdata(:,cond),sstyles{cond}); hold on;
 end
 for pair=1:imp.maxpairs
     line([p_dists(pair) p_dists(pair)], [plotdata(pair,1) plotdata(pair,2)], ...
-        'Color','k'); hold on;
+        'Color',hyp_colors(opt.pair_inds(pair),:),'LineWidth',2); hold on;
 end
 hline(1,'k--'); hold off;
 axis([a-1 b+1 0.7 2.1]);
 xlabel('Distance (cm)'); ylabel('ERPCOH divided by baseline fit');
 title(scl.g_label{group});
-%dcm_h=datacursormode(f);
-%set(dcm_h,'UpdateFcn',@coh_pairlabel_dcm)
+
+for hyp=1:length(opt.pair_indlbls)
+    text((.75)*max(p_dists), 2-(hyp/20), sprintf('%s', opt.pair_indlbls{hyp} ),'Color', ...
+        hyp_colors(hyp,:)); hold on;
+end
+
+dcm_h=datacursormode(f);
+set(dcm_h,'UpdateFcn',@coh_pairlabel_dcm)
 end
 plottitle(overtitle);
 tightfig;
 end
+
+%% condition difference in same way as above but use per subject/freq estimates
+%  to divisively normalize each to BASELINE COHERENCE before taking the mean...
+
+baseline_region=[-500 -200];
+[~,t_start_b]=min(abs(scl.t_ms-baseline_region(1)));
+[~,t_end_b]=min(abs(scl.t_ms-baseline_region(2)));
+
+timeregion=[200 400];
+[~,t_start]=min(abs(scl.t_ms-timeregion(1)));
+[~,t_end]=min(abs(scl.t_ms-timeregion(2)));
+
+hyp_colors=distinguishable_colors(length(opt.pair_indlbls),'g');
+clear overtitle;
+for freq_range=1:3
+f=figure;
+[~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
+[~,f_end]=min(abs(scl.freqs-pp.f_end_hz(freq_range)));
+overtitle=sprintf('%1.1f - %1.1f Hz, %d - %d ms',pp.f_start_hz(freq_range), ...
+    pp.f_end_hz(freq_range), timeregion(1), timeregion(2));
+%subplot_dummy=0;
+for group = pp.chosen_g(pp.plotn_g)
+%subplot_dummy=subplot_dummy+1;
+%subplot(1,2,subplot_dummy);
+plotdata=zeros(length(p_dists),2);
+sstyles={'gs','rs'};
+for cond=1:2
+    plotdata(:,cond)=mean( meanx(cohdata(t_start:t_end,f_end:f_start,cond,:,s_inds_g(:,group)),[4 5]) ./ ...
+        meanx(cohdata(t_start_b:t_end_b,f_end:f_start,:,:,s_inds_g(:,group)),[4 5]) ,2);
+    lookup=[lookup;p_dists,plotdata(:,cond)];
+    scatter(p_dists, plotdata(:,cond),sstyles{cond}); hold on;
+end
+for pair=1:imp.maxpairs
+    line([p_dists(pair) p_dists(pair)], [plotdata(pair,1) plotdata(pair,2)], ...
+        'Color',hyp_colors(opt.pair_inds(pair),:),'LineWidth',2); hold on;
+end
+hline(1,'k--'); hold off;
+axis([a-1 b+1 0.7 2.1]);
+xlabel('Distance (cm)'); ylabel('ERPCOH divided by baseline');
+title(scl.g_label{group});
+
+for hyp=1:length(opt.pair_indlbls)
+    text((.75)*max(p_dists), 2-(hyp/20), sprintf('%s', opt.pair_indlbls{hyp} ),'Color', ...
+        hyp_colors(hyp,:)); hold on;
+end
+
+dcm_h=datacursormode(f);
+set(dcm_h,'UpdateFcn',@coh_pairlabel_dcm)
+end
+plottitle(overtitle);
+tightfig;
+end
+
 
 %% legacy calculation but better
 

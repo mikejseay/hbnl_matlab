@@ -1,7 +1,9 @@
 function pair_subset=determine_distant_pairs(coords_filepath,exclude_logic, ...
     distance_spec,orientation_spec,edges_per_chan,do_plot)
-
 % determine pairs of electrodes for coherence analyses.
+    
+    % inputs
+    % --------
 
     %coords_filepath is number of electrodes (31 or 61) or the filepath of
     %a locations file. this has to be a chan_locs structure in the EEGLAB
@@ -33,12 +35,14 @@ function pair_subset=determine_distant_pairs(coords_filepath,exclude_logic, ...
         % 2 = alternate every other
         % 3 = alternate erratically
         
-    % output is the indices of the chosen / plotted pairs
-    % as a pairs x 2 matrix, can be used as the input for erp_analysis in
-    % the param_struct.
+    % outputs
+    % -------
+    % pair_subset: indices of the chosen / plotted pairs as a pairs x 2 matrix
+    % can be used as the input for erp_analysis in the opt structure.
 
-%%
-    
+% written by michael seay, hbnl, 2015
+
+% interpret channel object
 if isscalar(coords_filepath)
     %if coords spec is a number, load the file with that number of channels
     switch coords_filepath

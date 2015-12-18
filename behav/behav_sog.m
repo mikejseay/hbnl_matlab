@@ -1,11 +1,12 @@
 function [avgbet_po,stdbet_po,crit,crit_po,avgbet,resp_mat, ...
  po_mat,avgbet_po2,stdbet_po2] = behav_sog(etable)
-
 % interpet the event sequence in the single-outcome gambling task
 
 % available outs so far
 % avgbet_po,stdbet_po,crit,crit_po,avgbet,resp_mat
 % po_mat,avgbet_po2,stdbet_po2
+
+% written by michael seay, hbnl, 2015
 
 n_events=size(etable,1);
 num_prev_outcomes_resp=2;

@@ -18,6 +18,7 @@ for tick=1:length(t_xtick_ms)
     t_xtick(tick)=i;
 end
 [~,t_zero]=min(abs(t_ms));
+t_xtick_ms = t_xtick_ms ./ 1000;
 
 %freqs
 freqs=opt.rate*2./opt.wavelet_scales;
@@ -27,6 +28,8 @@ if length(freqs)==20
     f_ytick=[20 17 15 13 8 4];
 elseif length(freqs)==31
     f_ytick=[31 27 22 19 16 11 4 1];
+elseif length(freqs)==16
+    f_ytick=[16 14 12 10 8 6 2 1];
 end
 
 f_label=round(freqs(f_ytick)*10)/10;

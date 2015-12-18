@@ -1,4 +1,8 @@
-function scales=findCWTscales(n_samps,srate,freq_lims,padratio)
+function [scales,cycles,freqs]=findCWTscales(n_samps,srate,freq_lims,padratio,cycle_params)
+
+if nargin<5
+    cycle_params=[3 0.5];
+end
 
 %srate=256;
 %n_samps=384;
@@ -17,6 +21,7 @@ freqs=exp(freqs);
 freqsb=fliplr(freqs);
 
 scales=round(2*srate./freqsb);
+cycles = [ cycle_params(1) cycle_params(1)*freqs(end)/freqs(1)*(1-cycle_params(2))];
 
 end
 

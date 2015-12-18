@@ -1,6 +1,16 @@
-function plot_pairs(pair_subset,chan_locs,pair_inds,clickable,direction_spec)
+function plot_pairs(pairmat,chan_locs,pair_inds,clickable,direction_spec)
+% plot a set of pairs (n_pairs x 2) as arcs on a 2d headplot
 
-% plot a set of pairs (2 x n_pairs)
+% inputs
+% ------
+% pairmat: 2-column array (n_pairs x 2), #'s refer to channel #'s
+% chan_locs: channel locations structure in eeglab style, #'s match pairs above
+% pair_inds: numbers that group pairs into subsets
+% clickable: logical, whether the plot will have an interative clickable legend
+% direction_spec: 1, 2, or 3. aesthetics of arc plots
+
+% written by michael seay, hbnl, 2015
+
 if nargin<3
     pair_inds=[];
 end
@@ -13,7 +23,7 @@ if nargin<5
     direction_spec=1;
 end
 
-n_chosen_pairs=1:size(pair_subset,1);
+n_chosen_pairs=1:size(pairmat,1);
 
 if isempty(pair_inds)
     hyp_colors=false;
@@ -30,8 +40,8 @@ dummy_data=zeros(length(chan_locs),1);
 topoplot(dummy_data,chan_locs,'style','blank'); hold on;
 for chosen_pair=n_chosen_pairs
     %define [x1 x2], [y1 y2]
-    x=[chan_locs(pair_subset(chosen_pair,1)).topo_x chan_locs(pair_subset(chosen_pair,2)).topo_x];
-    y=[chan_locs(pair_subset(chosen_pair,1)).topo_y chan_locs(pair_subset(chosen_pair,2)).topo_y];
+    x=[chan_locs(pairmat(chosen_pair,1)).topo_x chan_locs(pairmat(chosen_pair,2)).topo_x];
+    y=[chan_locs(pairmat(chosen_pair,1)).topo_y chan_locs(pairmat(chosen_pair,2)).topo_y];
     %determine the direction
     switch direction_spec
         case 1
@@ -54,7 +64,7 @@ end
 %make labels
 p_label=cell(length(n_chosen_pairs),1);
 for pair=n_chosen_pairs
-    p_label{pair}=[chan_locs(pair_subset(pair,1)).labels,'-',chan_locs(pair_subset(pair,2)).labels];
+    p_label{pair}=[chan_locs(pairmat(pair,1)).labels,'-',chan_locs(pairmat(pair,2)).labels];
 end
 
 if clickable

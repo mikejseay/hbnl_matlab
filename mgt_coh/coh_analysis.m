@@ -136,7 +136,7 @@ sp_rowlabel={''};
 sp_columnlabel=scl.cond_label;
 x_plotlabel='Time (ms)';
 y_plotlabel='Frequency (Hz)';
-subplot_dims=sp_d;
+subplot_dims=pp.sp_d;
 %pp.chosen_p=1:14;
 
 prestim_interestpairs=[92 96 98 100 104]; %102 108
@@ -144,15 +144,15 @@ prestim_interestpairs=[92 96 98 100 104]; %102 108
 
 pp.figdum_init=pp.figdum;
 v=zeros(length(pp.chosen_g),imp.maxpairs,length(pp.plotn_cond),2);
-for group=pp.chosen_g(pp.plotn_g)
-for pair=[10 27] %43 45 54 77] %10 27  %7 8 12 36 37 41] %prestim_interestpairs %pp.chosen_p(pp.plotn_p)
+for group=2 %pp.chosen_g(pp.plotn_g)
+for pair=[1:13] %43 45 54 77] %10 27  %7 8 12 36 37 41] %prestim_interestpairs %pp.chosen_p(pp.plotn_p)
     pp.figdum=pp.figdum+1;
     figure(pp.figdum); subplot_dummy=0; 
     overtitle{pp.figdum}=sprintf('%s / %s',scl.p_label{pair},scl.g_label{group});
     %overtitle=sprintf('Phase Coherence between %s for %s',scl.p_label{pair},scl.g_label{group});
     for cond=pp.plotn_cond
         subplot_dummy=subplot_dummy+1;
-        subplot(sp_d(1),sp_d(2),subplot_dummy)
+        subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy)
         if cond==imp.maxconds+1
             %coh_tf_data=mean(atanh(cohdata(:,:,pp.cond_diff{1},pair,s_inds_g(:,group))),5) - ...
             %    mean(atanh(cohdata(:,:,pp.cond_diff{2},pair,s_inds_g(:,group))),5);
@@ -162,8 +162,8 @@ for pair=[10 27] %43 45 54 77] %10 27  %7 8 12 36 37 41] %prestim_interestpairs 
             %coh_tf_data=mean(atanh(cohdata(:,:,cond,pair,s_inds_g(:,group))),5);
             coh_tf_data=mean(cohdata(:,:,cond,pair,s_inds_g(:,group)),5);
         end
-        contourf(fliplr(coh_tf_data)',pp.n_contour);
-        shading flat
+        [~,h]=contourf(fliplr(coh_tf_data)',pp.n_contour);
+        set(h,'EdgeColor','None');
         %imagesc(mean(cohstats(:,:,cond,pair,s_inds_g(:,group)),5)');
         %axis([scl.t_start scl.t_end 3 imp.maxfreqs-2]);
         axis([scl.t_start scl.t_end 1 imp.maxfreqs]);
@@ -187,16 +187,14 @@ for fig=pp.figdum_init+1:pp.figdum
     figure(fig);
     set(gcf,'position',[0 120 1600 400]);
     for splot=1:subplot_dummy
+        temp_s=subplot(sp_d(1),sp_d(2),splot);
         if splot==subplot_dummy
-            subplot(sp_d(1),sp_d(2),splot); caxis([c_diff(1) c_diff(2)]);
-            colormap(cmap_diff);
+            caxis([c_diff(1) c_diff(2)]);
+            colormap(temp_s, cmap_diff);
         else
-            subplot(sp_d(1),sp_d(2),splot); caxis([c(1) c(2)]);
-            colormap(cmap);
+            caxis([c(1) c(2)]);
+            colormap(temp_s,cmap);
         end
-        colorbar;
-        freezeColors;
-        cbfreeze;
     end
     plottitle(overtitle{fig});
     tightfig;
@@ -213,19 +211,20 @@ y_plotlabel='Frequency (Hz)';
 
 % a custom index-fixing procedure for the 92 pairs, to reduce them to have
 % a similar number of pairs to the other hypotheses
-hyp_inds([39 42 45 46 51 52 61 64 73 74])=NaN;
+%hyp_inds([39 42 45 46 51 52 61 64 73 74])=NaN;
 %hyp_inds([39 42 45 46 51 52])=4;
 %hyp_inds([61 64 73 74])=5;
 
+pp.figdum_init=8;
 %pp.figdum_init=pp.figdum;
 pp.figdum=pp.figdum_init;
 v=zeros(length(pp.chosen_g),6,length(pp.plotn_cond),2);
 for group=pp.chosen_g(pp.plotn_g)
-for hyp=4:6
+for hyp=1:3
     pp.figdum=pp.figdum+1;
     figure(pp.figdum); subplot_dummy=0; 
-    overtitle{pp.figdum}=sprintf('%s / %s',hyp_indlbls{hyp},scl.g_label{group});
-    plot_hypinds=find(hyp_inds==hyp);
+    overtitle{pp.figdum}=sprintf('%s / %s',opt.pair_indlbls{hyp},scl.g_label{group});
+    plot_hypinds=find(opt.pair_inds==hyp);
     for cond=pp.plotn_cond
         subplot_dummy=subplot_dummy+1;
         subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy)
@@ -260,7 +259,78 @@ for fig=pp.figdum_init+1:pp.figdum
         temp_s=subplot(pp.sp_d(1),pp.sp_d(2),splot);
         if splot==subplot_dummy
             caxis([c_diff(1) c_diff(2)]);
-            
+            colormap(temp_s,cmap_diff);
+        else
+            caxis([c(1) c(2)]);
+            colormap(temp_s,cmap);
+        end
+    end
+    set_print_size(20,8);
+    plottitle(overtitle{fig});
+end
+%make color bars separately
+figure;
+colorscale_plot(c, cmap, 0.25);
+colorscale_plot(c_diff, cmap_diff, 0.75);
+%
+clear_plotassistvars
+
+%% image coherence in time-freq among a relational hypothesis' pairs (proportion of baseline)
+
+sp_rowlabel={''};
+sp_columnlabel=scl.cond_label;
+x_plotlabel='Time (ms)';
+y_plotlabel='Frequency (Hz)';
+
+baseline_region=[-500 -200];
+[~,t_start_b]=min(abs(scl.t_ms-baseline_region(1)));
+[~,t_end_b]=min(abs(scl.t_ms-baseline_region(2)));
+
+%pp.figdum_init=8;
+pp.figdum_init=pp.figdum;
+%pp.figdum=pp.figdum_init;
+v=zeros(length(pp.chosen_g),6,length(pp.plotn_cond),2);
+for group=pp.chosen_g(pp.plotn_g)
+for hyp=1:6
+    pp.figdum=pp.figdum+1;
+    figure(pp.figdum); subplot_dummy=0; 
+    overtitle{pp.figdum}=sprintf('%s / %s',opt.pair_indlbls{hyp},scl.g_label{group});
+    plot_hypinds=find(opt.pair_inds==hyp);
+    for cond=pp.plotn_cond
+        subplot_dummy=subplot_dummy+1;
+        subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy)
+        if cond==imp.maxconds+1
+            coh_tf_data=meanx(cohdata(:,:,pp.cond_diff{1},plot_hypinds,s_inds_g(:,group)),[1 2]) - ...
+                meanx(cohdata(:,:,pp.cond_diff{2},plot_hypinds,s_inds_g(:,group)),[1 2]);
+        else
+            coh_tf_data=meanx(cohdata(:,:,cond,plot_hypinds,s_inds_g(:,group)),[1 2]) ./ ...
+                repmat(meanx(cohdata(t_start_b:t_end_b,:,cond,plot_hypinds,s_inds_g(:,group)),2),[length(scl.t_ms) 1]);
+        end
+        [~,h]=contourf(fliplr(coh_tf_data)',pp.n_contour);
+        set(h,'EdgeColor','None');
+        axis([scl.t_start scl.t_end 1 imp.maxfreqs]);
+        v(group, hyp, subplot_dummy,:) = caxis;
+        set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); %xlabel('Time (ms)');
+        set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); %ylabel('Frequency (Hz)');
+        grid on; set(gca,'Layer','Top');
+        hold on; plot(ones(imp.maxfreqs,1)*scl.t_zero,linspace(1,imp.maxfreqs,imp.maxfreqs),'k--'); hold off;
+    end
+    adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,pp.sp_d);    
+end
+end
+v(v==0)=NaN;
+c(1)=nanmin(nanmin(nanmin(v(:,:,1:end-1,1)))); c(2)=nanmax(nanmax(nanmax(v(:,:,1:end-1,2))));
+c_diff(1)=nanmin(nanmin(nanmin(v(:,:,end,1)))); c_diff(2)=nanmax(nanmax(nanmax(v(:,:,end,2))));
+cmap=makecmap(c,1);
+%cmap=parula(256);
+cmap_diff=makecmap(c_diff);
+for fig=pp.figdum_init+1:pp.figdum
+    figure(fig);
+    set(gcf,'position',[0 120 1200 400]);
+    for splot=1:subplot_dummy
+        temp_s=subplot(pp.sp_d(1),pp.sp_d(2),splot);
+        if splot==subplot_dummy
+            caxis([c_diff(1) c_diff(2)]);
             colormap(temp_s,cmap_diff);
         else
             caxis([c(1) c(2)]);
@@ -273,11 +343,168 @@ end
 %make color bars separately
 cb_pos=[0.25 0.1 0.05 0.8];
 figure;
-h=colorscale([1 256], c_diff, range(c_diff)/5, 'vert','Position',cb_pos);
-colormap(h,cmap_diff);
-cb_pos=[0.75 0.1 0.05 0.8];
 h=colorscale([1 256], c, range(c)/5, 'vert','Position',cb_pos);
 colormap(h,cmap);
+
+cb_pos=[0.75 0.1 0.05 0.8];
+h=colorscale([1 256], c_diff, range(c_diff)/5, 'vert','Position',cb_pos);
+colormap(h,cmap_diff);
+
+%
+clear_plotassistvars
+
+%% image coherence in time-freq among a relational hypothesis' pairs (proportion of baseline per subject)
+
+sp_rowlabel={''};
+sp_columnlabel=scl.cond_label;
+x_plotlabel='Time (ms)';
+y_plotlabel='Frequency (Hz)';
+
+baseline_region=[-500 -200];
+[~,t_start_b]=min(abs(scl.t_ms-baseline_region(1)));
+[~,t_end_b]=min(abs(scl.t_ms-baseline_region(2)));
+
+%pp.figdum_init=8;
+pp.figdum_init=pp.figdum;
+%pp.figdum=pp.figdum_init;
+v=zeros(length(pp.chosen_g),6,length(pp.plotn_cond),2);
+for group=pp.chosen_g(pp.plotn_g)
+for hyp=1:6
+    pp.figdum=pp.figdum+1;
+    figure(pp.figdum); subplot_dummy=0; 
+    overtitle{pp.figdum}=sprintf('%s / %s',opt.pair_indlbls{hyp},scl.g_label{group});
+    plot_hypinds=find(opt.pair_inds==hyp);
+    for cond=pp.plotn_cond
+        subplot_dummy=subplot_dummy+1;
+        subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy)
+        if cond==imp.maxconds+1
+            coh_tf_data=meanx(cohdata(:,:,pp.cond_diff{1},plot_hypinds,s_inds_g(:,group)),[1 2]) - ...
+                meanx(cohdata(:,:,pp.cond_diff{2},plot_hypinds,s_inds_g(:,group)),[1 2]);
+        else
+            coh_tf_data=squeeze(mean( meanx(cohdata(:,:,cond,plot_hypinds,s_inds_g(:,group)),[1 2 5]) ./ ...
+                repmat(reshape(mean(mean(cohdata(t_start_b:t_end_b,:,cond,plot_hypinds,s_inds_g(:,group)),1),4), ...
+                [1 length(scl.freqs) sum(s_inds_g(:,group))]),[length(scl.t_ms) 1 1]) , 3 ));
+        end
+        [~,h]=contourf(fliplr(coh_tf_data)',pp.n_contour);
+        set(h,'EdgeColor','None');
+        axis([scl.t_start scl.t_end 1 imp.maxfreqs]);
+        v(group, hyp, cond,:) = caxis;
+        set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); %xlabel('Time (ms)');
+        set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); %ylabel('Frequency (Hz)');
+        grid on; set(gca,'Layer','Top');
+        hold on; plot(ones(imp.maxfreqs,1)*scl.t_zero,linspace(1,imp.maxfreqs,imp.maxfreqs),'k--'); hold off;
+    end
+    adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,pp.sp_d);    
+end
+end
+v(v==0)=NaN;
+c(1)=nanmin(nanmin(nanmin(v(:,:,1:end-1,1)))); c(2)=nanmax(nanmax(nanmax(v(:,:,1:end-1,2))));
+c_diff(1)=nanmin(nanmin(nanmin(v(:,:,end,1)))); c_diff(2)=nanmax(nanmax(nanmax(v(:,:,end,2))));
+cmap=makecmap(c,1);
+%cmap=parula(256);
+cmap_diff=makecmap(c_diff);
+for fig=pp.figdum_init+1:pp.figdum
+    figure(fig);
+    set(gcf,'position',[0 120 1200 400]);
+    for splot=1:subplot_dummy
+        temp_s=subplot(pp.sp_d(1),pp.sp_d(2),splot);
+        if splot==subplot_dummy
+            caxis([c_diff(1) c_diff(2)]);
+            colormap(temp_s,cmap_diff);
+        else
+            caxis([c(1) c(2)]);
+            colormap(temp_s,cmap);
+        end
+    end
+    set_print_size(20,8);
+    plottitle(overtitle{fig});
+end
+%make color bars separately
+cb_pos=[0.25 0.1 0.05 0.8];
+figure;
+h=colorscale([1 256], c, range(c)/5, 'vert','Position',cb_pos);
+colormap(h,cmap);
+cb_pos=[0.75 0.1 0.05 0.8];
+h=colorscale([1 256], c_diff, range(c_diff)/5, 'vert','Position',cb_pos);
+colormap(h,cmap_diff);
+%
+clear_plotassistvars
+
+%% image coherence in time-freq among a relational hypothesis' pairs (proportion of baseline per subject)
+% DIFFERENCE IS DIFFERENCE OF PROPORTIONS
+
+sp_rowlabel={''};
+sp_columnlabel=scl.cond_label;
+x_plotlabel='Time (ms)';
+y_plotlabel='Frequency (Hz)';
+
+baseline_region=[-500 -200];
+[~,t_start_b]=min(abs(scl.t_ms-baseline_region(1)));
+[~,t_end_b]=min(abs(scl.t_ms-baseline_region(2)));
+
+%pp.figdum_init=8;
+pp.figdum_init=pp.figdum;
+%pp.figdum=pp.figdum_init;
+v=zeros(length(pp.chosen_g),6,length(pp.plotn_cond),2); clear overtitle;
+for group=pp.chosen_g(pp.plotn_g)
+for hyp=1:3
+    pp.figdum=pp.figdum+1;
+    figure(pp.figdum); subplot_dummy=0;
+    overtitle{pp.figdum}=sprintf('%s / %s',opt.pair_indlbls{hyp},scl.g_label{group});
+    plot_hypinds=find(opt.pair_inds==hyp);
+    for cond=pp.plotn_cond
+        subplot_dummy=subplot_dummy+1;
+        subplot(pp.sp_d(1),pp.sp_d(2),subplot_dummy)
+        if cond==imp.maxconds+1
+            coh_tf_data=squeeze(mean( meanx(cohdata(:,:,pp.cond_diff{1},plot_hypinds,s_inds_g(:,group)),[1 2 5]) ./ ...
+                repmat(reshape(mean(mean(cohdata(t_start_b:t_end_b,:,pp.cond_diff{1},plot_hypinds,s_inds_g(:,group)),1),4), ...
+                [1 length(scl.freqs) sum(s_inds_g(:,group))]),[length(scl.t_ms) 1 1]) , 3 )) - ...
+                squeeze(mean( meanx(cohdata(:,:,pp.cond_diff{2},plot_hypinds,s_inds_g(:,group)),[1 2 5]) ./ ...
+                repmat(reshape(mean(mean(cohdata(t_start_b:t_end_b,:,pp.cond_diff{2},plot_hypinds,s_inds_g(:,group)),1),4), ...
+                [1 length(scl.freqs) sum(s_inds_g(:,group))]),[length(scl.t_ms) 1 1]) , 3 ));
+        else
+            coh_tf_data=squeeze(mean( meanx(cohdata(:,:,cond,plot_hypinds,s_inds_g(:,group)),[1 2 5]) ./ ...
+                repmat(reshape(mean(mean(cohdata(t_start_b:t_end_b,:,cond,plot_hypinds,s_inds_g(:,group)),1),4), ...
+                [1 length(scl.freqs) sum(s_inds_g(:,group))]),[length(scl.t_ms) 1 1]) , 3 ));
+        end
+        [~,h]=contourf(fliplr(coh_tf_data)',pp.n_contour);
+        set(h,'EdgeColor','None');
+        axis([scl.t_start scl.t_end 1 imp.maxfreqs]);
+        v(group, hyp, cond,:) = caxis;
+        set(gca,'XTick',scl.t_xtick,'XTickLabel',scl.t_xtick_ms); %xlabel('Time (ms)');
+        set(gca,'YTick',scl.f_ytick,'YTickLabel',scl.f_label); %ylabel('Frequency (Hz)');
+        grid on; set(gca,'Layer','Top');
+        hold on; plot(ones(imp.maxfreqs,1)*scl.t_zero,linspace(1,imp.maxfreqs,imp.maxfreqs),'k--'); hold off;
+    end
+    adorn_plots(sp_rowlabel,sp_columnlabel,x_plotlabel,y_plotlabel,overtitle,pp.sp_d);    
+end
+end
+v(v==0)=NaN;
+c(1)=nanmin(nanmin(nanmin(v(:,:,1:end-1,1)))); c(2)=nanmax(nanmax(nanmax(v(:,:,1:end-1,2))));
+c_diff(1)=nanmin(nanmin(nanmin(v(:,:,end,1)))); c_diff(2)=nanmax(nanmax(nanmax(v(:,:,end,2))));
+cmap=makecmap(c,1);
+%cmap=parula(256);
+cmap_diff=makecmap(c_diff);
+for fig=pp.figdum_init+1:pp.figdum
+    figure(fig);
+    set(gcf,'position',[0 120 1200 400]);
+    for splot=1:subplot_dummy
+        temp_s=subplot(pp.sp_d(1),pp.sp_d(2),splot);
+        if splot==subplot_dummy
+            caxis([c_diff(1) c_diff(2)]);
+            colormap(temp_s,cmap_diff);
+        else
+            caxis([c(1) c(2)]);
+            colormap(temp_s,cmap);
+        end
+    end
+    set_print_size(20,8);
+    plottitle(overtitle{fig});
+end
+%make color bars separately
+figure;
+colorscale_plot(c, cmap, 0.25);
+colorscale_plot(c_diff, cmap_diff, 0.75);
 %
 clear_plotassistvars
 
@@ -1003,4 +1230,69 @@ for group=pp.chosen_g(pp.plotn_g)
 end
 [p,ranova_table]=anova_rm(ranova_data,'off');
 plottitle(overtitle);
+clear_plotassistvars
+
+%% plot per-subject lines of the shape of results for a certain measure across conditions (ERPCOH)
+% as difference in time-region from baseline
+
+win_t=[250 400];
+win_f=[4 7];
+
+colorkey={'r','g','b','m','k','c'};
+sitekey={'UConn','Indiana','Iowa','SUNY','WashU','UCSD'};
+counter=zeros(1,6);
+
+[~,t_start_b]=min(abs(scl.t_ms-pp.t_start_b_ms));
+[~,t_end_b]=min(abs(scl.t_ms-pp.t_end_b_ms));
+
+[~,t_s]=min(abs(scl.t_ms-win_t(1))); [~,t_e]=min(abs(scl.t_ms-win_t(2)));
+[~,f_s]=min(abs(scl.freqs-win_f(1))); [~,f_e]=min(abs(scl.freqs-win_f(2)));
+
+site_charind=47;
+
+for hyp=1:6
+figure(hyp); gdum=0;
+overtitle=sprintf('%s in %1.1f - %1.1f Hz from %d - %d ms',...
+    opt.pair_indlbls{hyp},win_f(1),win_f(2),win_t(1),win_t(2));
+plot_hypinds=find(opt.pair_inds==hyp);
+for group=pp.chosen_g(pp.plotn_g)
+    conddiff_dir=zeros(imp.maxconds,1);
+    gdum=gdum+1;
+    %subplot(1,2,gdum)
+    linedata=meanx(cohdata(t_s:t_e,f_e:f_s,:,plot_hypinds,s_inds_g(:,group)),[3 5]) ./ ...
+        meanx(cohdata(t_start_b:t_end_b,f_e:f_s,:,plot_hypinds,s_inds_g(:,group)),[3 5]);
+    %linedata=meanx(cohdata(t_s:t_e,f_e:f_s,:,plot_hypinds,s_inds_g(:,group)),[3 5]) - ...
+    %    meanx(cohdata(t_start_b:t_end_b,f_e:f_s,:,plot_hypinds,s_inds_g(:,group)),[3 5]);
+    ranova_data{gdum}=linedata';
+    subplot(121);
+    for s=1:size(linedata,2)
+    %    site=str2double(mat_list{s}(site_charind));
+    %    counter(site)=counter(site)+1;
+        if linedata(pp.cond_diff{1},s) > linedata(pp.cond_diff{2},s)
+            mark='b-o'; conddiff_dir(1)=conddiff_dir(1)+1;
+        else
+            mark='m-*'; conddiff_dir(2)=conddiff_dir(2)+1;
+        end
+    %    title(sitekey{site});
+        %plot(linedata(:,s),mark); hold on; axis([0.5 imp.maxconds+.5 -.2 .3]);
+        plot(linedata(:,s),mark); hold on; axis([0 imp.maxconds+1 0.6 2]);
+    end
+    conddiff_text=sprintf(['%s > %s : %d/%d (%2.0f%%), M=%0.2f',char(177),'%0.2f'],...
+        scl.cond_label{pp.cond_diff{1}},scl.cond_label{pp.cond_diff{2}},...
+        conddiff_dir(1),sum(s_inds_g(:,group)),...
+        conddiff_dir(1)/sum(s_inds_g(:,group))*100,...
+        abs(diff(mean(linedata(:,linedata(pp.cond_diff{1},:)>...
+        linedata(pp.cond_diff{2},:)),2))),...
+        abs(diff(std(linedata(:,linedata(pp.cond_diff{1},:)>...
+        linedata(pp.cond_diff{2},:)),0,2))));
+    text(1.5,.25,conddiff_text); hold off;
+    set(gca,'XTick',[1:imp.maxconds],'XTickLabel',scl.cond_label);
+    xlabel('Condition');
+    ylabel('ERPCOH minus baseline');
+    subplot(122);
+    boxplot(diff(linedata,1));
+end
+[p(hyp,:),ranova_table]=anova_rm(ranova_data,'off');
+plottitle(overtitle);
+end
 clear_plotassistvars

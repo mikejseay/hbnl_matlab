@@ -11,7 +11,7 @@ figure(1);
 subplot(2,2,cond);
 hist(behdata.avgbet_po(cond,:));
 title(['Average Bet Following ',behdata.cond1{cond}]);
-axis([10 50 0 15])
+axis([10 50 0 40])
 end
 
 %% scatter the decision criterions in different ways
@@ -36,7 +36,7 @@ scatter(scatterin(3,:),scatterin(4,:))
 xlabel('Small Loss'); ylabel('Big Loss');
 
 %test directly for length of trains of repeats of one response
-plottitle('Criterion (+ is betting 50)')
+plottitle('Criterion by Previous Outcome (+ is betting 50)')
 
 %%
 figure(3)
@@ -89,18 +89,30 @@ hold on
 end
 
 %% turn the "average bet following previous outcome" mat into a "proportion mat"
+% this proportion refers to the proportion of bets of 50
 
+behdata.prop=(behdata.avgbet-10)/40;
 behdata.prop_po=(behdata.avgbet_po-10)/40;
+behdata.prop_po2=(behdata.avgbet_po2-10)/40;
+
+%% some statistical tests
+
+[h,p,ci,stats]=ttest(behdata.prop,ones(1,length(behdata.prop))*.5);
+
 
 %% RMANOVA with anova_rm
 
-s_inds_g(:,1)=strcmp(group,'Alcoholic');
-s_inds_g(:,2)=strcmp(group,'Comparison');
+%s_inds_g(:,1)=strcmp(group,'Alcoholic');
+%s_inds_g(:,2)=strcmp(group,'Comparison');
 
 %ranova_input=valencemeans;
 %ranova_input=avgprev2;
+clear ranova_input
+ranova_input(:,1)=squeeze(mean(behdata.prop_po(1:2,:),1));
+ranova_input(:,2)=squeeze(mean(behdata.prop_po(3:4,:),1));
 gdum=0;
-for g=1:2
+clear ranova_data
+for g=1
     gdum=gdum+1;
     ranova_data{gdum}=ranova_input(s_inds_g(:,g),:);
 end
@@ -109,15 +121,19 @@ end
 %% 2way RMANOVA with rm_anova2
 
 %ranova_input=behdata.avgprev_po;   %columns are 10,50,-10,-50 {[1 1],[2 1],[1 2],[2 2]}
-ranova_input=crit_prevoutcome;
-Y=reshape(ranova_input,240,1);
-S=[1:60]';
+s_inds=find(s_inds_g(:,pp.chosen_g));
+%ranova_input=behdata.avgbet_po(:,s_inds);
+%ranova_input=behdata.stdbet_po(:,s_inds);
+%ranova_input=behdata.crit_po(:,s_inds);
+ranova_input=behdata.prop_po(:,s_inds);
+Y=reshape(ranova_input,numel(ranova_input),1);
+S=[1:length(s_inds)]';
 S=[S;S;S;S];
-G=[ones(30,1);2*ones(30,1)];
-G=[G;G;G;G];
-F1=[ones(60,1);2*ones(60,1)];
+%G=[ones(length(s_inds),1);2*ones(length(s_inds),1)];
+%G=[G;G;G;G];
+F1=[ones(length(s_inds),1);2*ones(length(s_inds),1)];
 F1=[F1;F1];
-F2=[ones(120,1);2*ones(120,1)];
+F2=[ones(2*length(s_inds),1);2*ones(2*length(s_inds),1)];
 FACTNAMES={'amount','valence'};
 stats=rm_anova2(Y,S,F1,F2,FACTNAMES);
 

@@ -17,17 +17,22 @@ end
 end
 
 if true
-if false %if we're probably plotting time windows
-    n_cols = subplot_dims(2) - 1; %skip the last (we get it)
-else
-    n_cols = subplot_dims(2);
-end
+    if false %if we're probably plotting time windows
+        n_cols = subplot_dims(2) - 1; %skip the last (we get it)
+    else
+        n_cols = subplot_dims(2);
+    end
 else
     n_cols = subplot_dims(2);
 end
 
 if ~isempty(column_labels)
-for column=1:n_cols-1
+    if n_cols>3
+        subtractor=1;
+    else
+        subtractor=0;
+    end
+for column=1:n_cols-subtractor
     %subplot(subplot_dims(1),subplot_dims(2),(subplot_dims(1)-1)*subplot_dims(2)+column);
     subplot(subplot_dims(1),subplot_dims(2),column);
     %if column==n_cols

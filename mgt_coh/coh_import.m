@@ -1,5 +1,5 @@
 function [mat_list, imp, n_trials_all, erpdata, wave_evkdata, wave_totdata, cohdata, itcdata, behdata, wave_evknormdata] = ...
-    coh_import(opt, demogsfile, time_downsamp, behmat_path) %wave_evknorm
+    coh_import(opt, demogsfile, time_downsamp, behmat_path, datatypes) %wave_evknorm
 % Imports computed EEG measures into the MATLAB workspace for freestyle
 % plotting and exploration.
 
@@ -16,14 +16,14 @@ end
 
 % if a behavioral path has been specified, and behavioral data has been
 % requested
-if nargin>=4 && nargout >=9
+if nargin>=4 && nargout >=9 && ~isempty(behmat_path)
     behdata=beh_import(behmat_path,mat_list);
 end
 
 ns=length(mat_list);
 
 %size of data dimensions, taking into account a time-downsampling factor
-maxtimepts=round((opt.n_samps)/time_downsamp);
+maxtimepts=round((opt.n_samps)/time_downsamp) - 1;
 times2import=1:time_downsamp:maxtimepts*time_downsamp;
 
 if isfield(opt,'tf_timedownsamp_ratio')
@@ -42,12 +42,14 @@ maxchans=length(opt.chan_vec);
 maxpairs=size(opt.coherence_pairs,1);
 
 %indicate mats to load
-n_datatypes=min(nargout-2, 5); %6
-datatype_names={'n_trials','erp','wave_evk','wave_tot','coh'};
-datatypes={datatype_names{1:n_datatypes}};
-if nargout>=10
-    datatypes{end+1}='wave_evknorm';
-end
+if nargin<5
+    n_datatypes=min(nargout-2, 5); %6
+    datatype_names={'n_trials','erp','wave_evk','wave_tot','coh'};
+    datatypes={datatype_names{1:n_datatypes}};
+    if nargout>=10
+        datatypes{end+1}='wave_evknorm';
+    end
+end 
 
 %pre-allocate vars
 n_trials_all=zeros(maxconds,ns);
@@ -98,7 +100,7 @@ if exist('wave_evknorm','var')
 wave_evknormdata(:,:,:,:,s_valid)=abs(wave_evknorm(tftimes2import,1:maxchans,:,:));
 end
 if exist('wave_tot','var')
-wave_totdata(:,:,:,:,s_valid)=wave_tot(tftimes2import,1:maxchans,:,:);
+wave_totdata(:,:,:,:,s_valid)=wave_tot(tftimes2import,1:maxchans,:,:); %square to give power (uV^2)
 end
 fprintf(num2str(s_attempt))
 if mod(s_attempt,20)==0

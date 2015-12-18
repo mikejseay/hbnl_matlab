@@ -1,0 +1,6 @@
+function linkaxes_all(h)
+%link subplots axes to min/max of data given a set of handles
+
+
+
+end

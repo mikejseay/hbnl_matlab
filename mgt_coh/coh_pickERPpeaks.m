@@ -1,13 +1,26 @@
-function [erpdata,peakmat] = coh_pickERPpeaks (imp, scl, s_inds_g, erpdata, lp_cutoff)
-% pick peaks in erpdata
+function [erpdata,peakmat] = coh_pickERPpeaks (imp, scl, s_inds_g, erpdata, opt_logic, lp_cutoff, base_window)
+% filter, baseline, and pick peaks in erpdata
+
+if nargin < 7
+    base_window=[-100 0];
+end
+if nargin < 6
+    lp_cutoff = 16;
+end
+if nargin < 5
+    opt_logic = [true true];
+end
 
 % filter
-erpdata=filter_erpdata(erpdata,imp.timerate,lp_cutoff);
+if opt_logic(1)
+    erpdata=filter_erpdata(erpdata,imp.timerate,lp_cutoff);
+end
 
 % baseline
-baseline_window_ms=[-100 0];
-erpdata=baseline_erp_datastruct(erpdata,scl.t_ms, ...
-    baseline_window_ms);
+if opt_logic(2)
+    erpdata=baseline_erp_datastruct(erpdata,scl.t_ms, ...
+        base_window);
+end
 
 % pick peaks
 

@@ -1,13 +1,33 @@
 function [scl, s_inds_g, s_demogs] = coh_demog(mat_list, imp, scl, n_trials_all, demogsfile, trials_necessary, custom_rej)
 % index-match demographic information to eeg data matrices
 
+if nargin<7
+    custom_rej=[];
+end
+if nargin<6
+    trials_necessary=15;
+end
+if nargin<5 || isempty(demogsfile)
+    demogs_logic=false;
+    s_demogs=[];
+else
+    demogs_logic=true;
+end
+
 % first reject subjects based on number of trials per condition
 s_inds = coh_reject (imp, n_trials_all, trials_necessary, custom_rej);
 
 % create demographic columns corresponding to the mat_list
 s_inds_g=false(length(s_inds),3);
 
-load(demogsfile)
+if demogs_logic
+    load(demogsfile)
+    if exist('demogs_table','var')
+        uniquefilestring=demogs_table.UniqueFileString;
+        group=demogs_table.COGA_CTL;
+        age_eeg=demogs_table.EEG_Age;
+    end
+end
 
 n_files=length(mat_list);
 
@@ -20,27 +40,27 @@ for f=1:n_files
     file_string{f}=mat_list{f}(string_loc:string_loc+10);
 end
 
-if true
-%find strings present in both
-[~,is1,is2]=intersect(file_string, uniquefilestring);
+if demogs_logic
+    %find strings present in both
+    [~,is1,is2]=intersect(file_string, uniquefilestring);
 
-uniquefilestring=uniquefilestring(is2); group=group(is2); age_eeg=age_eeg(is2);
-bigtable=table(uniquefilestring,group,age_eeg);
-file_string=file_string(is1);
-smalltable=table(file_string);
-s_demogs=join(smalltable,bigtable,'LeftKeys','file_string','RightKeys','uniquefilestring');
+    uniquefilestring=uniquefilestring(is2); group=group(is2); age_eeg=age_eeg(is2);
+    bigtable=table(uniquefilestring,group,age_eeg);
+    file_string=file_string(is1);
+    smalltable=table(file_string);
+    s_demogs=join(smalltable,bigtable,'LeftKeys','file_string','RightKeys','uniquefilestring');
+
+    %cut out subjects that had insufficient data
+    s_demogs(find(imp.bad_s==1),:)=[];
 end
-
-%cut out subjects that had insufficient data
-s_demogs(find(imp.bad_s==1),:)=[];
 
 % start filling in indices
 s_inds_g(:,1) = s_inds;
 
-if true
-s_inds_g(:,2) = s_inds & strcmpi(s_demogs.group,'Comparison');
-s_inds_g(:,3) = s_inds & strcmpi(s_demogs.group,'Alcoholic');
-fprintf('%d CTL subjects and %d ALC subjects remain\n',sum(s_inds_g(:,2)),sum(s_inds_g(:,3)))
+if demogs_logic
+    s_inds_g(:,2) = s_inds & strcmpi(s_demogs.group,'Comparison');
+    s_inds_g(:,3) = s_inds & strcmpi(s_demogs.group,'Alcoholic');
+    fprintf('%d CTL subjects and %d ALC subjects remain\n',sum(s_inds_g(:,2)),sum(s_inds_g(:,3)))
 end
 
 g_label={'All Subjects','CTL','ALC'};

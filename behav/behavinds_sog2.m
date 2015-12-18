@@ -1,5 +1,4 @@
 function [trial_mat,typedescriptors,respRT] = behavinds_sog2(etable)
-
 % interpet the event sequence in the single-outcome gambling task
 
 % available outs so far
@@ -7,6 +6,8 @@ function [trial_mat,typedescriptors,respRT] = behavinds_sog2(etable)
 % prevoutcome_mat, avgbet2_prevoutcome,stdbet2_prevoutcome
 
 % response: 1=bet of 10, 8=bet of 50
+
+% written by michael seay, hbnl, 2015
 
 rt_range=[99 1001];
 

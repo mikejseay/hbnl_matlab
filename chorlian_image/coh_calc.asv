@@ -156,7 +156,7 @@ if ~exist(cleanfile_path,'file')
         if opt.vis
             %visualize with trimoutlier
             [EEG,h] = pop_trimOutlierPlot(EEG);
-            export_fig([subj_ckpath,name,'_1raw'],'-png');
+            print([subj_ckpath,name,'_1raw'],'-dpng');
             close(h)
         
             % high-pass filter at 1 Hz and visualize again (not used
@@ -164,7 +164,7 @@ if ~exist(cleanfile_path,'file')
         
             %visualize with trimoutlier
             [EEG2,h] = pop_trimOutlierPlot(EEG2);
-            export_fig([subj_ckpath,name,'_2hpf'],'-png');
+            print([subj_ckpath,name,'_2hpf'],'-dpng');
             close(h)
         end
         
@@ -185,7 +185,7 @@ if ~exist(cleanfile_path,'file')
         if opt.vis
             %visualize with trimoutlier
             [EEG,h] = pop_trimOutlierPlot(EEG);
-            export_fig([subj_ckpath,name,'_3asr'],'-png');
+            print([subj_ckpath,name,'_3asr'],'-dpng');
             close(h)
         end
         
@@ -223,7 +223,7 @@ if ~exist(cleanfile_path,'file')
     if opt.vis
         EEG=import_hdf_eeglab_inline(data_file,dataR,h1_struct);
         [EEG,h] = pop_trimOutlierPlot(EEG);
-        export_fig([subj_ckpath,name,'_4'],'-png');
+        print([subj_ckpath,name,'_4'],'-dpng');
         close(h)
         clear EEG
     end
@@ -248,7 +248,11 @@ end
 
 % do wavelet calcuation
 n_scales = numel(opt.wavelet_scales);
-dataW = wavelet_calc(dataR, opt.wavelet_scales);
+if ~isfield(opt, 'wavelet_type')
+    dataW = wavelet_calc(dataR, opt.wavelet_scales, opt.rate);
+else
+    
+end
 
 if is_mc_bin
     dataW = reshape(dataW, [n_samps, n_trials, n_chans, n_scales]);

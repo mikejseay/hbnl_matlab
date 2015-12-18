@@ -1,6 +1,9 @@
 function s_inds = coh_reject (imp, n_trials_all, trials_necessary, custom_rej)
 % subject rejection step
 
+if nargin < 4
+    custom_rej=[];
+end
 if nargin < 3
     trials_necessary=15;
 end

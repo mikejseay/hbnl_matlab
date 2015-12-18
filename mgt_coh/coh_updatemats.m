@@ -25,6 +25,11 @@ end
 if exist(demogsfile,'file')
 
     load(demogsfile)
+    
+    if exist('demogs_table','var')
+        uniquefilestring=demogs_table.UniqueFileString;
+    end
+    
     n_files=length(mat_list);
 
     [dir_string,~,~]=fileparts(mat_list{1});

@@ -1,6 +1,8 @@
 function behdata=behav_fixnames(behdata)
 % fix names in behdata
 
+% written by michael seay, hbnl, 2015
+
 behdata.avgbet_po=behdata.avgbet_prevoutcome;
 behdata.stdbet_po=behdata.stdbet_prevoutcome;
 

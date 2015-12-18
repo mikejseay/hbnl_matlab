@@ -1,9 +1,59 @@
-function [outpairs,outinds]=pair_filter(inpairs,ininds,chan_locs,type,arg)
+function [outpairs,outinds]=pair_filter(inpairs,ininds,chan_locs,filter_type,arg)
+% filters an array of pairs in one of several modes
+
+% inputs
+% ------
+% inpairs: array of pairs (n_pairs x 2)
+% ininds: array of grouping indices corresponding to inpairs (n_pairs x 1)
+% chan_locs: channel locations structure in eeglab style, #'s match pairs above
+% filter_type: type of filter being used
+% arg: argument for filter, see guide below
+
+% outputs
+% -------
+% outpairs: filtered pairs
+% outinds: filtered grouping indices
+
+% filter types
+% ------------
+% 'x_edge' excludes outer-most electrodes (on edges of head in 2d headplot)
+    % no arg required
+    
+% 'distance' filters based on distance between channels in each pair
+    % arg should be [lower upper] in cm OR
+    % a single number,
+        % 1 = < mean - std
+        % 2 = (mean - std , mean)
+        % 3 = (mean - std, mean + std)
+        % 4 = (mean, mean + std)
+        % 5 = > mean + std
+        
+% 'angle' filters based on orientation of electrode pairs
+    % arg should be:
+    % 'ap' = anterior-posterior oriented pairs
+    % 'lr' = left-right oriented pairs
+    % 'aplr' = vertical and horizontal pairs (nearly anterior-posterior or
+    %left-right)
+    % 'diag' = diagonal pairs
+    % 'all' = all pairs regardless of orientation (don't filter)
+    
+% 'max_degree' filters pairs such that each electrode is connected to at most
+% arg other electrodes
+    % arg should be 1 number
+    
+% 'hemispheric' filters pairs based on hemispheric relationship
+    % arg should be
+    % 'intra' = only intrahemispheric pairs (e.g. F1-F3)
+    % 'inter' = only interhemispheric pairs (e.g. F3-F4)
+    % 'neither' = only pairs that contain a midline electrode (e.g. FZ-F5)
+    % 'all' = return all (don't filter)
+
+% written by michael seay, hbnl, 2015
 
 n_pairs=size(inpairs,1);
 n_chans=length(chan_locs);
 
-switch type
+switch filter_type
     case 'x_edge'
         
         exclude_channels=[1 2 3 4 14 15 26 27 30 31 32 33 36 37 38 46 45 54 55 58];

@@ -1,7 +1,12 @@
 function [pairs,seed_inds,seed_indlbls]=pair_with_all_others(seed_chanlocs, seed_electrodes)
-% pairs an array of electrodes (seed_electrodes) with all other electrodes
-% in the seed_chanlocs channel locations structure, generating a "seed
-% coherence" hypothesis of pairs
+% generates a "seed coherence" hypothesis of pairs
+
+% inputs
+% ------
+% seed_chanlocs: channel locations object
+% seed_electrodes: electrodes to use as seeds (#'s or names)
+
+% written by michael seay, hbnl, 2015
 
 % load location file
 if ~isstruct(seed_chanlocs)
