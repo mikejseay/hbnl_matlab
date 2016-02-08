@@ -1,4 +1,8 @@
-function adorn_plots(row_labels,column_labels,xlabel,ylabel,overtitle,subplot_dims)
+function adorn_plots(row_labels,column_labels,xlabel,ylabel,overtitle,subplot_dims,exclude_lastcol)
+
+if nargin < 7
+    exclude_lastcol=false;
+end
 
 % plot subplot row/column labels and an "over-title"
 ax = findobj(gcf,'type','axes');
@@ -27,7 +31,7 @@ else
 end
 
 if ~isempty(column_labels)
-    if n_cols>3
+    if exclude_lastcol
         subtractor=1;
     else
         subtractor=0;
@@ -45,7 +49,7 @@ end
 
 if iscell(overtitle) %quick fix
 else
-plottitle(overtitle);
+plottitle(overtitle,2);
 end
 plotlabel(xlabel,ylabel)
 

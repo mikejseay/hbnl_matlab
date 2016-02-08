@@ -1,5 +1,7 @@
 function erpdata_out = filter_erpdata(erpdata_in,srate,lp_cutoff)
 
+%erpdata_in is timepts x channels x conditions x subjects
+
 [EEG,n_conds,n_subs] = import_erpdata_eeglab_inline(erpdata_in,srate);
 EEG = pop_eegfiltnew(EEG, [], lp_cutoff);
 

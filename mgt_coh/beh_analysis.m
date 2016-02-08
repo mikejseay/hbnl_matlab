@@ -95,10 +95,15 @@ behdata.prop=(behdata.avgbet-10)/40;
 behdata.prop_po=(behdata.avgbet_po-10)/40;
 behdata.prop_po2=(behdata.avgbet_po2-10)/40;
 
+%% turn the respRT into regular RT for 10 or 50
+
+rt=squeeze(behdata.respRT(1,:,:))';
+
 %% some statistical tests
 
 [h,p,ci,stats]=ttest(behdata.prop,ones(1,length(behdata.prop))*.5);
-
+[h,p,ci,stats]=ttest(behdata.prop(s_inds_g(:,1)),ones(1,sum(s_inds_g(:,1)))-behdata.prop(s_inds_g(:,1)));
+%[h,p,ci,stats]=ttest(behdata.crit,ones(1,length(behdata.prop))*.5);
 
 %% RMANOVA with anova_rm
 
@@ -144,7 +149,7 @@ ds_out=array2table(ds_out,'VariableNames',{'Criterion','Subject','Group','PrevAm
 
 %% RMANOVA with matlab built-ins
 
-ranova_input=avgprev2;
+ranova_input=behdata.avgbet_po2;
 ranova_tbl=table(group,age_eeg);
 for cond=1:size(ranova_input,2)
     tbl_col=table(ranova_input(:,cond),'VariableNames',{['c',num2str(cond)]});
@@ -153,7 +158,7 @@ end
 %preds=table([1 2 1 2]',[1 1 2 2]',...
 %    'VariableNames',{'amount','valence'});
 preds=[-80 -30 0 30 80]';
-%rm=fitrm(ranova_tbl,['c1-c',num2str(size(ranova_input,2)),'~group'],'WithinDesign',preds,'WithinModel','amount*valence');
-rm=fitrm(ranova_tbl,['c1-c',num2str(size(ranova_input,2)),'~group'],'WithinDesign',preds,'WithinModel','orthogonalcontrasts');
+rm=fitrm(ranova_tbl,['c1-c',num2str(size(ranova_input,2)),'~group'],'WithinDesign',preds,'WithinModel','amount*valence');
+%rm=fitrm(ranova_tbl,['c1-c',num2str(size(ranova_input,2)),'~group'],'WithinDesign',preds,'WithinModel','orthogonalcontrasts');
 ranova_results=ranova(rm);
 anova_results=anova(rm);

@@ -611,7 +611,7 @@ colorscale_plot(c_diff, cmap_diff, 0.75);
 %
 clear_plotassistvars
 
-%% image coherence in time-freq in a REGIONAL HYPOTHESIS, as increase from baseline
+%% image ITC in time-freq in a REGION, as increase from baseline
 % uses condition-mean (common) baseline, GROUPS TOGETHER
 
 sp_rowlabel=scl.g_label{pp.plotn_g};
@@ -623,6 +623,7 @@ y_plotlabel='Frequency (Hz)';
 [~,t_start_b]=min(abs(scl.t_ms-pp.t_start_b_ms));
 [~,t_end_b]=min(abs(scl.t_ms-pp.t_end_b_ms));
 
+spec_chans = [7, 25, 58];
 p_alpha=0.05;
 n_perms=2000;
 
@@ -630,34 +631,37 @@ n_perms=2000;
 pp.figdum_init=pp.figdum;
 v=zeros(length(pp.chosen_g),6,length(pp.plotn_cond),2);
 clear overtitle;
-clear coh_stat_data;
-for hyp=4:5
+clear itc_stat_data;
+for hyp=1:2
 pp.figdum=pp.figdum+1;
 figure(pp.figdum); subplot_dummy=0;
 if hyp==length(opt.pair_indlbls)+1
     overtitle{pp.figdum}='';
-    plot_hypinds=1:imp.maxpairs;
+    plot_hypchans=1:imp.maxchans;
 else
     overtitle{pp.figdum}=sprintf('%s / %s',opt.pair_indlbls{hyp});
-    plot_hypinds=find(opt.pair_inds==hyp);
+    %plot_hypinds=find(opt.pair_inds==hyp);
+    %plot_hypchans=unique(opt.coherence_pairs(plot_hypinds,:));
+    plot_hypchans = spec_chans(hyp);
 end
 for group=pp.chosen_g(pp.plotn_g)
+itc_plot_base=permute(meanx(wave_evknormdata(t_start_b:t_end_b,plot_hypchans,:,:,s_inds_g(:,group)),[3 5]),[3 1 2]);
 for cond=pp.plotn_cond
     subplot_dummy=subplot_dummy+1;
     subplot(pp.sp_d(1)*length(pp.plotn_g),pp.sp_d(2),subplot_dummy)
     if cond==imp.maxconds+1
-        coh_plot_data = meanx( bsxfun(@minus, ...
-            cohdata(:,:,pp.cond_diff{1},plot_hypinds,s_inds_g(:,group)), ...
-            cohdata(:,:,pp.cond_diff{2},plot_hypinds,s_inds_g(:,group))), [1 2]);
-        v(group,hyp,cond,:) = [minx(coh_plot_data) maxx(coh_plot_data)];
-        [~,h]=contourf(fliplr(coh_plot_data)',pp.n_contour);
+        itc_plot_data = meanx( bsxfun(@minus, ...
+            wave_evknormdata(:,plot_hypchans,:,pp.cond_diff{1},s_inds_g(:,group)), ...
+            wave_evknormdata(:,plot_hypchans,:,pp.cond_diff{2},s_inds_g(:,group))), [1 3]);
+        v(group,hyp,cond,:) = [minx(itc_plot_data) maxx(itc_plot_data)];
+        [~,h]=contourf(fliplr(itc_plot_data)',pp.n_contour);
         set(h,'EdgeColor','None');
     else
-        %coh_stat_data{cond,group-1} = squeeze( bsxfun(@minus,mean(cohdata(:,:,cond,plot_hypinds,s_inds_g(:,group)),4), ...
-        %    mean(mean(mean( cohdata(t_start_b:t_end_b,:,:,plot_hypinds,s_inds_g(:,group)), 1),3),4) ) );
-        coh_stat_data{cond,group-1} = meanx(cohdata(:,:,cond,plot_hypinds,s_inds_g(:,group)), [1 2]);
-        coh_plot_data = squeeze(mean( coh_stat_data{cond,group-1} , 3));
-        [~,h]=contourf(fliplr(coh_plot_data)',pp.n_contour);
+        itc_stat_data{cond,group-1} = squeeze( bsxfun(@minus,mean(wave_evknormdata(:,plot_hypchans,:,cond,s_inds_g(:,group)),2), ...
+            mean(mean(mean( wave_evknormdata(t_start_b:t_end_b,plot_hypchans,:,:,s_inds_g(:,group)), 1),2),4) ) );
+        %itc_stat_data{cond,group-1} = meanx(wave_evknormdata(:,plot_hypchans,:,cond,s_inds_g(:,group)), [1 3]);
+        itc_plot_data = squeeze(mean( itc_stat_data{cond,group-1} , 3));
+        [~,h]=contourf(fliplr(itc_plot_data)',pp.n_contour);
         set(h,'EdgeColor','None');
         v(group,hyp,cond,:) = caxis;
     end
@@ -674,13 +678,13 @@ end
 
 c(1)=min(min(min(v(:,:,1:end-1,1)))); c(2)=max(max(max(v(:,:,1:end-1,2))));
 c_diff(1)=min(min(v(:,:,end,1))); c_diff(2)=max(max(v(:,:,end,2)));
-cmap=makecmap(c, 0, 'purpleorange');
+cmap=makecmap(c, Inf, 'redgreen');
 %cmap = parula(256);
 %cmap = pmkmp(256, 'cubicl');
 cmap_diff=makecmap(c_diff, 0, 'redgreen');
 for fig=pp.figdum_init+1:pp.figdum
 figure(fig)
-set(gcf,'position',[1300 120 1000 400]);
+set(gcf,'position',[1300 120 1500 400]);
 for splot=1:length(pp.plotn_g)*length(pp.plotn_cond);
     temp_s=subplot(pp.sp_d(1)*length(pp.plotn_g),pp.sp_d(2),splot);
     if mod(splot,length(pp.plotn_cond))==0

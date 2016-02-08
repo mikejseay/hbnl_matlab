@@ -1,7 +1,7 @@
-function [scl, pp] = coh_plotparams(imp,scl)
+function [scl, pp] = coh_plotparams(imp,scl,cond_diff)
 % set certain plotting parameters for coh_analysis
 
-cond_diff={[2],[1]}; %[6],[7]};
+%cond_diff={[1 2],[3 4]}; %[6],[7]};
 scl.cond_label{imp.maxconds+1}= ...
     [scl.cond_label{cond_diff{1}},' - ',scl.cond_label{cond_diff{2}}];
 %scl.cond_label{imp.maxconds+1}='cond diff';
@@ -18,7 +18,9 @@ coh_absmax=1;
 
 %[9 7 8 17 16 18 23 25 24];
 % for eros [7 8 16 18 25];
-chosen_chan=[7 8 9 16 17 18 23 24 25 56 24 55];
+%chosen_chan=[7 8 9 16 17 18 23 24 25 56 24 55];
+%chosen_chan=[58 27 26 25 56 7 42 41 15 14 16 23 24 38];
+chosen_chan=[9 7 8 23 25 24 31 58 30];
 chosen_cond=1;
 
 
@@ -35,9 +37,9 @@ if ~exist('tfparams','var')
 %f_end_hz=[  3.2, 4.2, 5,   7.3,  13,   24,   32, 5, 7, 6];  %upper edges
 %f_indiv_hz=[2.6, 3.9, 4.6, 6.1,  10,  18, 28,    4, 6, 5]; %indiv bands
 
-f_start_hz=[2, 4, 8,  14, 27, 3, 5];     %lower edges
-f_end_hz=[  4, 7, 13, 24, 32, 5, 7];  %upper edges
-f_indiv_hz=[3, 5, 10, 18, 28, 4, 6]; %indiv bands
+f_start_hz=[2,   4,   8,    14, 26, 3, 5];     %lower edges
+f_end_hz=[  3,   6,   13,   24, 32, 5, 7];  %upper edges
+f_indiv_hz=[2.5, 5.5, 10.5, 19, 29, 4, 6]; %indiv bands
 
 else
 f_start_hz=[2, 3, 5, 8,  13];   %lower edges
@@ -46,26 +48,30 @@ f_indiv_hz=[2, 4, 6, 10, 18];   %indiv bands
 end
 chosen_freq=[6 10 13 16 19];
 
-chosen_g=[1];
+chosen_g=[2 3];
 chosen_p=[14 12 4 9];
 
 %t_start_ms=[0 100 200 300 400 600];
 %t_end_ms=[100 200 300 400 600 800];
+
 %t_win_start=-1000;
 %t_win_end=500;
 %t_win_space=100;
 %t_start_ms=[t_win_start:t_win_space:t_win_end];
 %t_end_ms=t_start_ms+t_win_space;
-t_start_ms=[90 160 250 290 340 400 500]; %-600
-t_end_ms=[110 180 270 310 380 500 600]; %-200
-%t_start_ms=[90 200 500];
-%t_end_ms=[180 400 600];
+
+%t_start_ms=[90 160 250 290 340 400 500]; %-600
+%t_end_ms=[110 180 270 310 380 500 600]; %-200
+
+t_start_ms=[0 200 400 600];
+t_end_ms=[200 400 600 800];
+
 t_start_b_ms=-500;
 t_end_b_ms=-200;
 
 
-plotn_chan=[1 4 9 10]; %1:length(chosen_chan); %[1 3 5]; %[2 5 8]; %[1 2 3 4 6 8]; %3
-plotn_cond=[1 2 3];
+plotn_chan=1:length(chosen_chan); %[1 3 5 6 7 12 13 14]; %[1 3 5]; %[2 5 8]; %[1 2 3 4 6 8]; %3
+plotn_cond=1:imp.maxconds+1;
 plotn_f=1:length(f_start_hz);
 plotn_g=1:length(chosen_g);
 plotn_p=[1:4];
@@ -104,7 +110,7 @@ pp=v2struct(cond_diff, chosen_g, chosen_chan, f_start_hz, f_end_hz, chosen_freq,
     t_start_b_ms, t_end_b_ms, maxwin, hist_ax, ...
     hist_nbin, p_loc, cmap, cmap_line, ...
     pmkmp_scheme_line, figdum_init, figdum, n_contour, ...
-    plotn_chan, plotn_cond, plotn_g, plotn_f, plotn_t, chosen_topochan, topo_elecs ...
+    plotn_chan, plotn_cond, plotn_g, plotn_f, plotn_t, chosen_topochan, topo_elecs, ...
     chosen_coh_limit, chosen_coh_limit_diff, f_indiv_hz, chosen_p, plotn_p, ...
     sp_d);
 

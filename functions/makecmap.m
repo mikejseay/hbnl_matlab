@@ -22,17 +22,29 @@ if ~isempty(colors)
         case 'redblue'
             poscolor='Reds';
             negcolor='Blues';
+            monocolor='Reds';
         case 'purpleorange'
             poscolor='Purples';
             negcolor='Oranges';
+            monocolor='Purples';
+        case 'redgreen'
+            poscolor='Reds';
+            negcolor='Greens';
+            monocolor='Purples';
+        case 'green'
+            monocolor='Greens';
+        case 'red'
+            monocolor='Reds';
     end
 else
     if center==0
         poscolor = 'Reds';
         negcolor = 'Blues';
+        monocolor='Greens';
     elseif center == 1
         poscolor = 'Purples';
         negcolor = 'Oranges';
+        monocolor='Greens';
     end 
 end
 
@@ -55,7 +67,7 @@ if lims(1) < center && lims(2) > center %(polar data)
     
 else
        
-    cmap=cbrewer('seq', 'Greens', n_shades);
+    cmap=cbrewer('seq', monocolor, n_shades);
     
 end
         

@@ -1,16 +1,18 @@
-function opt=coh_createopt
+function opt = coh_createopt
 % coh_createopt - GUI for creation of options structure for batch analysis
 % of EEG data files in the HBNL lab at SUNY Downstate Medical Center.
 %  
-%GUI Usage;
-%  >> opt=coh_createopt;
+% GUI Usage;
+%  >> opt = coh_createopt;
 %
 %Notes:
 %
 %  Record of revisions:
-%   Date           Programmers               Description of change
-%   ====        =================            =====================
-%  10/29/15         Mike Seay                  initial version
+%   Date           Programmers              Description of change
+%   ====        =================   =======================================
+%  10/29/15         Mike Seay        initial version
+%  1 /4 /16         Mike Seay        added features and deployed first
+%                                    public version
 
 %  GUI
 if nargin < 2
@@ -35,7 +37,7 @@ geometry    = { [2 1 1.5] [2 1 1.5] [2 1 1.5] [1] ... %files / lists
                 [2 1 1.5] [3.33 1.66 1 1.5] [2 1 1.5] [2 1 1.5] [3.33 1.66 1 1.5] ... %recording dims
                 [2 1 1.5] [2 1 1.5] [2 1 1.5] ... %pipeline details 1
                 [3.33 1.66 1 1.5] [2 1 1.5] [3.33 1.66 1 1.5] [2 1 1.5] ... %pipeline details 2
-                [2 1 1.5] [2 1 1.5] [2 1 1.5] [2 1 1.5] [2 1 1 1 1 1]... %tf specs
+                [2 1 1.5] [2 1 1.5] [2 1 1.5] [2 1 1.5] [2 1 1 1 1 1 1]... %tf specs
                 [1] [2 1 1.5] [2 1 1.5] [2 1 1.5]}; %outputs
                 
 uilist = {    { 'Style', 'text', 'string', 'Text file containing list of full data file path(s)', 'horizontalalignment', 'right' }, ...
@@ -141,10 +143,11 @@ uilist = {    { 'Style', 'text', 'string', 'Text file containing list of full da
               { 'Style', 'text', 'string', ''  }, ...
               ...
               { 'Style', 'text', 'string', 'Measures to include in output .mats' }, ...
-              { 'Style', 'checkbox', 'Value', 1 'string', 'Single-trial', 'horizontalalignment', 'right'}, ...
-              { 'Style', 'checkbox', 'Value', 1 'string', 'ERO (evoked)', 'horizontalalignment', 'right'}, ...
-              { 'Style', 'checkbox', 'Value', 1 'string', 'ERO (normed evoked)', 'horizontalalignment', 'right'}, ...
-              { 'Style', 'checkbox', 'Value', 1 'string', 'ERO (total)', 'horizontalalignment', 'right'}, ...
+              { 'Style', 'checkbox', 'Value', 1 'string', 'Pre-CSD Good Trials', 'horizontalalignment', 'right'}, ...
+              { 'Style', 'checkbox', 'Value', 1 'string', 'Post-CSD All Trials', 'horizontalalignment', 'right'}, ...
+              { 'Style', 'checkbox', 'Value', 1 'string', 'ERO (total amp)', 'horizontalalignment', 'right'}, ...
+              { 'Style', 'checkbox', 'Value', 1 'string', 'ERO (total power)', 'horizontalalignment', 'right'}, ...
+              { 'Style', 'checkbox', 'Value', 1 'string', 'ITC', 'horizontalalignment', 'right'}, ...
               { 'Style', 'checkbox', 'Value', 1 'string', 'Coherence', 'horizontalalignment', 'right'}, ...
               ...
               ... %
@@ -165,49 +168,47 @@ uilist = {    { 'Style', 'text', 'string', 'Text file containing list of full da
           
 results = inputgui(geometry, uilist, 'help coh_createopt;', 'Set Up Option for Data Processing - coh_createopt');
 
-if true
-
 % Verify inputs
-if any(cellfun(@isempty,{results{[1 2 3 5 9 20 21 22]}}))
+if any(cellfun(@isempty, results([1 2 3 5 9 29 30 31]) ))
     error('A key input was omitted.');
 end
 
 % Define variables from GUI
-infile_list=results{1};
-[~,list_filename,~]=fileparts(results{1});
+infile_list         = results{1};
+[~,list_filename,~] = fileparts(results{1});
 
-data_type=results{2};
-coords_file=results{3};
-trial_init_type=eval(results{4});
-case_vec=eval(results{5});
-case_label=eval(results{6});
+data_type           = results{2};
+coords_file         = results{3};
+trial_init_type     = eval(results{4});
+case_vec            = eval(results{5});
+case_label          = eval(results{6});
 
 %chan_vec
 if logical(results{8})
-    chan_vec=eval(results{7});
+    chan_vec = eval(results{7});
 else
-    chan_vec=setdiff(1:64,eval(results{7}));
+    chan_vec = setdiff(1:64,eval(results{7}));
 end
-n_chans=length(chan_vec);
+n_chans = length(chan_vec);
 
-rate=eval(results{9});
-epoch_lims=eval(results{10});
-prestim_ms=-epoch_lims(1);
-lengthen=logical(results{11});
-artf_ms_vec=eval(results{12});
-epochrej_method=results{13};
-thresh=eval(results{14});
-cleanset=logical(results{15});
+rate                = eval(results{9});
+epoch_lims          = eval(results{10});
+prestim_ms          = -epoch_lims(1);
+lengthen            = logical(results{11});
+artf_ms_vec         = eval(results{12});
+epochrej_method     = results{13};
+thresh              = eval(results{14});
+cleanset            = logical(results{15});
 
 %set the hp filter transition bands as half and 1.5 times the cut-off
-hpfilt_cutoff=eval(results{16});
-hpfilt_bands=[.5*hpfilt_cutoff 1.5*hpfilt_cutoff];
+hpfilt_cutoff       = eval(results{16});
+hpfilt_bands        = [.5*hpfilt_cutoff 1.5*hpfilt_cutoff];
 
 %CSD
 if logical(results{17})
     
     %load the CSD for 61 channels
-    if chan_vec==[1:31 33:62];
+    if chan_vec == [1:31 33:62];
         load(results{18});
     else
         error('Must use 61 channels')
@@ -215,86 +216,87 @@ if logical(results{17})
     
 end
 
-freq_lims=eval(results{19});
-padratio=round(eval(results{20})/2);
-n_samps=round(range(epoch_lims)*rate/1000);
-wavelet_scales=findCWTscales(n_samps,rate,freq_lims,padratio);
-tf_timedownsamp_ratio=eval(results{21});
+freq_lims           = eval(results{19});
+padratio            = round(eval(results{20})/2);
+n_samps             = round(range(epoch_lims)*rate/1000);
+wavelet_scales      = findCWTscales(n_samps,rate,freq_lims,padratio);
+tf_timedownsamp_ratio = eval(results{21});
 
 %coherence pairs
 if strcmpi(results{22},'none')
-    coherence_pairs=[];
+    coherence_pairs = [];
+    pair_inds = [];
+    pair_indlbls = [];
 else
     [coherence_pairs, pair_inds, pair_indlbls]= ...
-        coh_choosepairs(results{22},coords_file);
+        coh_choosepairs(results{22}, coords_file);
 end
 
-measure_names={'erptrial','wave_evk','wave_evknorm','wave_tot','coh'};
-measures={  measure_names{  find( [results{23:27}] )  }  };
+measure_names   = {'preCSD_erptrial', 'erptrial', 'wave_tot', 'wave_totpow', 'wave_evknorm', 'coh'};
+measures        = measure_names( find( [results{23:28}] ) );
 
-outsuffix=results{28};
+outsuffix = results{29};
 
-outpath=results{29};
-if ~exist(outpath,'dir') %make if DNE yet
+outpath = results{30};
+if ~exist(outpath, 'dir') %make if DNE yet
     mkdir(outpath);
-    fprintf('Creating output directory at %s\n',outpath);
+    fprintf('Creating output directory at %s\n', outpath);
 end
-batchpath=results{30};
-if ~exist(batchpath,'dir')
+batchpath = results{31};
+if ~exist(batchpath, 'dir')
     mkdir(batchpath);
-    fprintf('Creating directory for options, batch, and log files at %s\n',batchpath);
+    fprintf('Creating directory for options, batch, and log files at %s\n', batchpath);
 end
 
 %determine the full path where the opt will be saved
-optfilename=[list_filename,outsuffix,'_opt.mat'];
-optpath=fullfile(batchpath,optfilename);
+optfilename = [list_filename, outsuffix, '_opt.mat'];
+optpath     = fullfile(batchpath, optfilename);
 
-%create batch scripts with 100 files per process
+%create batch scripts with 100 files per process, or 4 divided equally
 %fix the name of the batch_id so that it does not contain illegal chars
-batch_id=[list_filename,outsuffix];
+batch_id = [list_filename,outsuffix];
 if ~isvarname(batch_id)
-    batch_id=matlab.lang.makeValidName(batch_id);
+    batch_id = matlab.lang.makeValidName(batch_id);
 end
-batchscripts=coh_makebatches(batch_id,infile_list,batchpath,optpath,100);
-n_batches=length(batchscripts);
+batchscripts = coh_makebatches(batch_id,infile_list,batchpath,optpath);
+n_batches = length(batchscripts);
 
-logpath=cell(n_batches,1);
-for batch=1:n_batches
-    logfilename=[list_filename,outsuffix,'_b',num2str(batch),'.log'];
-    logpath{batch}=fullfile(results{30},logfilename);
+logpath = cell(n_batches,1);
+for batch = 1:n_batches
+    logfilename = [list_filename, outsuffix, '_b', num2str(batch), '.log'];
+    logpath{batch} = fullfile(results{31}, logfilename);
 end
 
 %hard-coded for now
-save_clean=true;
-cleandir='/processed_data/matlab_common';
-getbehav=false;
-n_cohperms=0;
-reref='off';
-rng_seed=10;
-vis=false;
-vis_path='/active_projects/mike/vis';
+save_clean  = true;
+cleandir    = '/processed_data/matlab_common';
+getbehav    = false;
+n_cohperms  = 0;
+reref       = 'off';
+rng_seed    = 10;
+vis         = false;
+vis_path    = '/active_projects/mike/vis';
+coherence_type = 'pure';
 
-opt=v2struct(infile_list,data_type,coords_file,trial_init_type, case_vec, ...
+opt=v2struct(infile_list, data_type, coords_file, trial_init_type, case_vec, ...
     case_label, chan_vec, n_chans, rate, epoch_lims, prestim_ms, ...
     lengthen, artf_ms_vec, epochrej_method, thresh, cleanset, hpfilt_bands, ...
     csd_G, csd_H, freq_lims, n_samps, wavelet_scales, tf_timedownsamp_ratio, ...
     coherence_pairs, pair_inds, pair_indlbls, ...
     measures, outsuffix, outpath, batchpath, optpath, ...
     batch_id, batchscripts, logpath, save_clean, cleandir, getbehav, ...
-    n_cohperms, reref, rng_seed, vis, vis_path);
+    n_cohperms, reref, rng_seed, vis, vis_path, coherence_type);
 
-end
-
-if exist(optpath,'file')
-    overwrite=input('Options file being overwritten. Continue? (y/n) ','s');
-    if strcmpi(overwrite,'y')
-        save(optpath,'opt');
+if exist(optpath, 'file')
+    overwrite=input('Options file being overwritten. Continue? (y/n) ', 's');
+    if strcmpi(overwrite, 'y')
+        save(optpath, 'opt');
     else
         fprintf('Exiting...\n');
         return 
     end
 else
-    save(optpath,'opt');
+    save(optpath, 'opt');
 end
 
 disp('Done.');

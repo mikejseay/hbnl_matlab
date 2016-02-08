@@ -559,8 +559,7 @@ end
 
 sstyles={'ks','ms'};
 
-hyp_colors=distinguishable_colors(length(opt.pair_indlbls)+2);
-hyp_colors(6:7,:)=[];
+hyp_colors=distinguishable_colors(length(opt.pair_indlbls));
 clear overtitle;
 for freq_range=1:2
 f=figure;
@@ -582,7 +581,7 @@ plotdata(:,2)=meanx(cohdata(t_start_b:t_end_b,f_end:f_start,:,:,s_inds_g(:,group
 %imp_inds = abs(diff(plotdata,1,2)) > median(abs(diff(plotdata,1,2)));
 %imp_inds = pair_hypinds;
 %imp_inds = true(size(p_dists_jit));
-imp_inds = 1:41;
+imp_inds = 42:;
 %imp_inds = [42:90]';
 %[stats df pvals] = statcond( statdata, 'paired','on', 'method', 'perm', 'naccu', n_perms, ...
 %    'alpha', p_alpha, 'structoutput', 'on');
@@ -610,7 +609,7 @@ end
 
 end
 tightfig;
-set_print_size(5,4);
+set_print_size(9,4);
 end
 
 %% condition difference in same way as above but use per subject/freq estimates

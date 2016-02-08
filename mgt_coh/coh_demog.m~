@@ -63,13 +63,10 @@ s_inds_g(:,1) = s_inds;
 if demogs_logic
     
     %groups
-    if iscellstr(s_demogs.group(1))
-        s_inds_g(:,2) = s_inds & strcmpi(s_demogs.group,'Comparison');
-        s_inds_g(:,3) = s_inds & strcmpi(s_demogs.group,'Alcoholic');
-    elseif isnumeric(s_demogs.group(1))
-        s_inds_g(:,2) = s_inds & s_demogs.group==1;
-        s_inds_g(:,3) = s_inds & s_demogs.group==2;
-    end
+    %s_inds_g(:,2) = s_inds & strcmpi(s_demogs.group,'Comparison');
+    %s_inds_g(:,3) = s_inds & strcmpi(s_demogs.group,'Alcoholic');
+    s_inds_g(:,2) = s_inds & s_demogs.group==1;
+    s_inds_g(:,3) = s_inds & s_demogs.group==2;
     
     %age mask
     if ~isempty(age_range)
@@ -77,13 +74,13 @@ if demogs_logic
         s_inds_g = bsxfun(@and, s_inds_g, s_demogs.age_eeg < age_range(2));
     end
     
-    fprintf('%d G1 subjects and %d G2 subjects remain\n',sum(s_inds_g(:,2)),sum(s_inds_g(:,3)))
+    fprintf('%d CTL subjects and %d ALC subjects remain\n',sum(s_inds_g(:,2)),sum(s_inds_g(:,3)))
     
 end
 
 fprintf('%d total subjects remain\n', sum(s_inds_g(:,1)) )
 
-g_label={'All Subjects','CTL','ALC'};
+g_label={'All Subjects','HR','LR'};
 g_color={'k','c','m'};
 g_all=1;
 

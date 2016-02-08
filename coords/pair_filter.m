@@ -3,16 +3,16 @@ function [outpairs,outinds]=pair_filter(inpairs,ininds,chan_locs,filter_type,arg
 
 % inputs
 % ------
-% inpairs: array of pairs (n_pairs x 2)
-% ininds: array of grouping indices corresponding to inpairs (n_pairs x 1)
-% chan_locs: channel locations structure in eeglab style, #'s match pairs above
-% filter_type: type of filter being used
-% arg: argument for filter, see guide below
+% inpairs:      array of pairs (n_pairs x 2)
+% ininds:       array of grouping indices corresponding to inpairs (n_pairs x 1)
+% chan_locs:    channel locations structure in eeglab style, #'s match pairs above
+% filter_type:  type of filter being used
+% arg:          argument for filter, see guide below
 
 % outputs
 % -------
-% outpairs: filtered pairs
-% outinds: filtered grouping indices
+% outpairs:     filtered pairs
+% outinds:      filtered grouping indices
 
 % filter types
 % ------------
@@ -49,6 +49,10 @@ function [outpairs,outinds]=pair_filter(inpairs,ininds,chan_locs,filter_type,arg
     % 'all' = return all (don't filter)
 
 % written by michael seay, hbnl, 2015
+
+if isempty(ininds)
+    ininds=ones(size(inpairs));
+end
 
 n_pairs=size(inpairs,1);
 n_chans=length(chan_locs);

@@ -14,7 +14,7 @@ for hyp=hyps'
     subplot_dummy=subplot_dummy+1;
     subplot(hyp_spdims(1),hyp_spdims(2),subplot_dummy);
     inds2p=find(hyp_inds==hyp);
-    plot_pairs(pairs(inds2p,:),chan_locs,hyp_inds(inds2p),clickable);
+    plot_pairs(pairs(inds2p,:),chan_locs,hyp_inds(inds2p),clickable,2);
     title(hyp_indlbls{hyp});
 end
 

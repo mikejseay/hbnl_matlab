@@ -1,4 +1,5 @@
-function [pairs, pair_inds, pair_indlbls]=determine_regional_pairs(coords_filepath,relation,regions,sparse_logic)
+function [pairs, pair_inds, pair_indlbls] = ...
+    determine_regional_pairs(coords_filepath,relation,regions,sparse_logic)
 
 % relation is a string, can be 'inter', 'intra', or 'both'
 % regions is a cell, can contain strings 'frontal', 'central', 'parietal', ...

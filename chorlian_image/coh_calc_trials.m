@@ -1,4 +1,4 @@
-function Y = coh_calc(data_file, data_file_type, opt)
+function [Y,dataWG] = coh_calc_trials(data_file, data_file_type, opt)
 % pre-processes EEG data, applies wavelet transform, and calculates
 % coherence (ITC and ERPCOH).
 
@@ -392,6 +392,7 @@ wavelet_evk = zeros(n_tfsamps, n_chans, n_scales, n_cases);
 wavelet_evknorm = zeros(n_tfsamps, n_chans, n_scales, n_cases);
 wavelet_tot = zeros(n_tfsamps, n_chans, n_scales, n_cases);
 wavelet_totpow = zeros(n_tfsamps, n_chans, n_scales, n_cases);
+dataWG = cell(1, n_cases);
 
 for m = 1:n_cases
     mean_data(:, :, m) = squeeze(mean(dataR(:, trial_mat(:, m), :), 2)); %erps
@@ -407,6 +408,8 @@ for m = 1:n_cases
     wavelet_totpow(:, :, :, m) = ... %power
         squeeze(mean(dataW(1:ds_rate:end, trial_mat(:, m), :, :).* ...
         conj(dataW(1:ds_rate:end, trial_mat(:, m), :, :)), 2)); % this is a faster abs().^2
+    % make a version of dataW with only good trials
+    dataWG{m} = dataW(1:ds_rate:end, trial_mat(:, m), :, :);
 end
 
 if any(ismember(opt.measures,'wave_evk')) %deprecated
@@ -425,7 +428,7 @@ if any(ismember(opt.measures,'erptrial')) % this is post-CSD all-trials
     Y.erptrial = dataR;
 end
 if any(ismember(opt.measures,'preCSD_erptrial')) % this is pre-CSD only good trials
-    Y.preCSD_erptrial = dataF(:, any(trial_mat,2), :); %accept only good trials
+    %Y.preCSD_erptrial = dataF(:, any(trial_mat,2), :); %accept only good trials
 end
 
 Y.erp = mean_data;

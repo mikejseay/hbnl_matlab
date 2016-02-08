@@ -13,12 +13,12 @@ end
 
 % filter
 if opt_logic(1)
-    erpdata=filter_erpdata(erpdata,imp.timerate,lp_cutoff);
+    erpdata=filter_erpdata(erpdata,imp.erptimerate,lp_cutoff);
 end
 
 % baseline
 if opt_logic(2)
-    erpdata=baseline_erp_datastruct(erpdata,scl.t_ms, ...
+    erpdata=baseline_erp_datastruct(erpdata,scl.t_ms_erp, ...
         base_window);
 end
 
@@ -35,8 +35,8 @@ pkwin_e_ms=550;
 dopause=false;
 
 % P3
-[~,pkwin_s]=min(abs(scl.t_ms-pkwin_s_ms));
-[~,pkwin_e]=min(abs(scl.t_ms-pkwin_e_ms));
+[~,pkwin_s]=min(abs(scl.t_ms_erp-pkwin_s_ms));
+[~,pkwin_e]=min(abs(scl.t_ms_erp-pkwin_e_ms));
 peakmat=zeros(size(s_inds_g,1),imp.maxconds,2);
 %f=figure;
 for s=1:size(s_inds_g,1)
@@ -64,7 +64,7 @@ for cond=1:imp.maxconds
     title(sprintf('S%d',s)); hold off;
     end
     %
-    peakmat(s,cond,:)=[val,scl.t_ms(pkwin_s+ind-1)];
+    peakmat(s,cond,:)=[val,scl.t_ms_erp(pkwin_s+ind-1)];
 end
 if dopause
     pause

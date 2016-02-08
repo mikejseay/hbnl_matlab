@@ -12,17 +12,18 @@ s_logic=false(imp.s_valid,2);
 
 trial_thresh=trials_necessary*ones(imp.maxconds,1);
 for chosen_s=1:imp.s_valid
+    
+    %trials
     s_logic(chosen_s,1)=all(n_trials_all(:,chosen_s) > trial_thresh);
+    
+    %custom
     if ismember(chosen_s,custom_rej)
         s_logic(chosen_s,2)=false;
     else
         s_logic(chosen_s,2)=true;
-    end
+    end    
 end
 
 s_inds=all(s_logic,2);
-
-fprintf('%d percent of subjects remaining (%d / %d)\n', ...
-    round(sum(s_inds)/imp.s_valid*100),sum(s_inds),imp.s_valid)
 
 end
