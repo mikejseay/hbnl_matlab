@@ -1,5 +1,6 @@
 %define the cnt file, dat file, and generic epoch length\
-data_file='/vol01/active_projects/crystalann/washu/ns374/50723006/ant_6_d1_50723006_32.cnt';
+%data_file='/vol01/active_projects/crystalann/washu/ns374/50723006/ant_6_d1_50723006_32.cnt';
+data_file='/raw_data/neuroscan/suny/ns164/a0001071/vp3_4_a1_a0001071.cnt';
 %data_file='/vol01/raw_data/staging/iowa/ns316/30172356/ant_6_d1_30172356_32.cnt';
 %'C:\Users\Mike\Desktop\ica test\ern_9_a1_40001009_32.cnt';
 %dat_file='C:\Users\Mike\Desktop\ica test\ern_9_a1_40001009.dat';
@@ -40,9 +41,9 @@ EEG = eeg_checkset( EEG );
 %EEG = eeg_checkset( EEG );
 
 %extract epochs
-EEG = pop_epoch( EEG, {  }, [-0.5 1], 'newname', 'CNT file epochs', 'epochinfo', 'yes');
-[ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 1,'overwrite','on','gui','off'); 
-EEG = eeg_checkset( EEG );
+%EEG = pop_epoch( EEG, {  }, [-0.5 1], 'newname', 'CNT file epochs', 'epochinfo', 'yes');
+%[ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 1,'overwrite','on','gui','off'); 
+%EEG = eeg_checkset( EEG );
 
 %import behavioral data
 %EEG = pop_loaddat( EEG, dat_file, epoch_length);

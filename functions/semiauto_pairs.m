@@ -5,7 +5,8 @@
 
 load('/export/home/mike/matlab/origin/coords/61chans_ns.mat')
 type = 'regional';
-regions = {'frontal','central','parietal','occipital','lefttemporal','righttemporal'};
+% regions = {'frontal','central','parietal','occipital','lefttemporal','righttemporal'};
+regions = {'frontal','parietal','occipital'};
 min_dist = 5;
 maxpairs2test = 12:46;
 minpairs2test = 7;
@@ -19,7 +20,7 @@ if strcmpi(type,'combo') % combinatorial start point
     
 elseif strcmpi(type,'regional') % regional start point
 
-    [p,pi,pi_lbl] = determine_regional_pairs(chan_locs, 'both', regions, true);
+    [p,pi,pi_lbl] = determine_regional_pairs(chan_locs, 'both', regions, 2);
 
 end
 
@@ -57,9 +58,22 @@ for pair_thresh = maxpairs2test
     
     bar(ce,co);
     axis([0 n_hyps 0 maxpairs2test(end)]);
-    title(['MPPH=',num2str(pair_thresh),', var=',num2str(pairvar,3)])
+    title(['MPPH=',num2str(pair_thresh),', var=',num2str(pairvar(pair_thresh),3)])
     
 end
 figure;
 subplot(211); plot(maxpairs2test,pairvar(maxpairs2test));
 subplot(212); plot(maxpairs2test(2:end),diff(pairvar(maxpairs2test)));
+
+
+%% pick a final amount and re-label for saving
+
+[p5,pi5] = sparsify_regional_hyps( p4, pi4, chan_locs, 23);
+figure; hist(pi5, 6);
+
+%%
+
+hyp_inds = pi5;
+pairs = p5;
+hyp_indlbls = pi_lbl2;
+

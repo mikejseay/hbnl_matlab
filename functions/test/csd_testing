@@ -1,0 +1,16 @@
+% testing various CSD applications
+
+% full_load  % (load up something with a decent ERP)
+
+chan_erps = squeeze(erpdata(:,:,1,3));
+
+% CSD toolbox (spherical spline-based)
+
+
+% EEGLAB's function
+
+
+% David Chorlian's adaptation of Kongming Wang's local polynomical
+
+coords = [chan_locs(:).X; chan_locs(:).Y; chan_locs(:).Z]';
+chan_erps_lap3 = surf_laplacian_dbc(chan_erps, coords, 0, 4);

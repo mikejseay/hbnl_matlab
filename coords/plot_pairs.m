@@ -38,7 +38,7 @@ end
 %plot them as arcs on a head
 plot_chans=unique(pairmat);
 dummy_data=zeros(length(plot_chans),1);
-topoplot(dummy_data,chan_locs(plot_chans),'style','blank'); hold on;
+topoplot_arc(dummy_data,chan_locs(plot_chans),'style','blank','electrodes','off'); hold on;
 for chosen_pair=n_chosen_pairs
     %define [x1 x2], [y1 y2]
     x=[chan_locs(pairmat(chosen_pair,1)).topo_x chan_locs(pairmat(chosen_pair,2)).topo_x];

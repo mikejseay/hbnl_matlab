@@ -14,7 +14,7 @@ trial_thresh=trials_necessary*ones(imp.maxconds,1);
 for chosen_s=1:imp.s_valid
     
     %trials
-    s_logic(chosen_s,1)=all(n_trials_all(:,chosen_s) > trial_thresh);
+    s_logic(chosen_s,1)=all(n_trials_all(:,chosen_s) >= trial_thresh);
     
     %custom
     if ismember(chosen_s,custom_rej)

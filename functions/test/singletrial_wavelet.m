@@ -76,6 +76,16 @@ for cond = 1:n_conds
     dataE{cond} = erptrial_filt(:,output.trials(:,cond),chan);
 end
 
+%% quickly check up on the ERO vals
+
+figure;
+for cond=1:2
+    subplot(1,2,cond);
+    itcplotdata = flipud(10*log10( bsxfun(@rdivide, squeeze(output.wave_tot(:,chan,:,cond)).^2, ...
+        mean(squeeze(output.wave_tot(t_start_b:t_end_b,chan,:,cond)).^2,1)) )');
+    contourf( itcplotdata );
+end
+
 %% quickly check up on the ITC vals
 
 figure;
@@ -134,15 +144,17 @@ plot(amp1{2} - amp2{2});
 
 figure;
 subplot(211);
-plot(ampnorm{1});
+plot(ampnorm{1}); ylim([-2 2]);
 subplot(212);
-plot(ampnorm{2});
+plot(ampnorm{2}); ylim([-2 2]);
 
 %% plot a "stacked" visualization of the bandpass-filtered trials
 
+figure
+for cond=1:2
 n_trials = size(amp{cond},2);
 
-figure;
+subplot(1,2,cond);
 for trial=1:n_trials
     plot(amp{cond}(:,trial)+trial);
     hold on;
@@ -151,6 +163,7 @@ plot(ones(n_timepts,1)*dotted_times(1),linspace(0,n_trials,n_timepts),'k--');
 plot(ones(n_timepts,1)*dotted_times(2),linspace(0,n_trials,n_timepts),'k--');
 hold off
 ylim([-1 n_trials+2]);
+end
 
 %% plot a "stacked" visualization of the bandpass-filtered trials
 % (inter-site)
@@ -303,6 +316,50 @@ for cond = 1:2
     end
 end
 
+
+%% plot a histogram of trial phases at a given time point
+
+sp_rowlabel = conds;
+sp_columnlabel = { [num2str(t_ms(dotted_times(1)),3),' ms'], [num2str(t_ms(dotted_times(2)),3),' ms'] };
+sp_xlabel = 'Time Region';
+sp_ylabel = 'Condition';
+overtitle = '';
+sp_dims = [2 2];
+
+raxis_lim = 0.6;
+
+pts = linspace(-3.2, 3.2, 100);
+
+spd=0;
+figure;
+for cond = 1:2
+    for time = 1:length(dotted_times)
+        
+        spd=spd+1;
+        subplot(2,2,spd);
+        
+        %cheat to make the raxis big enough
+        t = 0 : .01 : 2 * pi;
+        P = polar2(t, raxis_lim * ones(size(t)));
+        set(P, 'Visible', 'off')
+        hold on;
+        
+        %histogram( phi{cond}(dotted_times(time),:), 10 );
+        %axis( [-4 4 0 25] );
+        
+        [f,xi] = ksdensity(phi{cond}(dotted_times(time),:), pts);
+        %plot(xi,f);
+        %axis( [-pi pi 0 0.6] );
+        
+        polar( xi, f );
+        
+        %itcval = abs(output.wave_evknorm(dotted_times(time),chan,freq,cond));
+        %text(-1.5*raxis_lim,.75*raxis_lim,['ITC = ',num2str( itcval, 3 )]);
+        
+    end
+end
+%adorn_plots(sp_rowlabel, sp_columnlabel, sp_xlabel, sp_ylabel, overtitle, sp_dims);
+
 %% plot a compass plot of trial phases at a given time point
 
 for cond = 1:2
@@ -324,7 +381,7 @@ sp_ylabel = 'Condition';
 overtitle = '';
 sp_dims = [2 2];
 
-raxis_lim = 15;
+raxis_lim = 12;
 
 spd=0;
 figure;

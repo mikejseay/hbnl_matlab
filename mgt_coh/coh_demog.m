@@ -27,7 +27,8 @@ if demogs_logic
     load(demogsfile)
     if exist('demogs_table','var')
         uniquefilestring=demogs_table.UniqueFileString;
-        group=demogs_table.POP;
+        % group=demogs_table.POP;
+        group=demogs_table.sex;
         age_eeg=demogs_table.EEG_Age;
     end
 end
@@ -40,7 +41,9 @@ string_loc=length(dir_string)+8;
 %get just the unique file strings
 file_string=cell(n_files,1);
 for f=1:n_files
-    file_string{f}=mat_list{f}(string_loc:string_loc+10);
+    file_string_tmp=mat_list{f}(string_loc:string_loc+10);
+    file_string_tmp(2) = '1';
+    file_string{f}=file_string_tmp;
 end
 
 if demogs_logic
@@ -64,8 +67,12 @@ if demogs_logic
     
     %groups
     if iscellstr(s_demogs.group(1))
-        s_inds_g(:,2) = s_inds & strcmpi(s_demogs.group,'Comparison');
-        s_inds_g(:,3) = s_inds & strcmpi(s_demogs.group,'Alcoholic');
+        %s_inds_g(:,2) = s_inds & strcmpi(s_demogs.group,'Comparison');
+        %s_inds_g(:,3) = s_inds & strcmpi(s_demogs.group,'Alcoholic');
+        %s_inds_g(:,2) = s_inds & strcmpi(s_demogs.group,'C');
+        %s_inds_g(:,3) = s_inds & strcmpi(s_demogs.group,'A');
+        s_inds_g(:,2) = s_inds & strcmpi(s_demogs.group,'m');
+        s_inds_g(:,3) = s_inds & strcmpi(s_demogs.group,'f');
     elseif isnumeric(s_demogs.group(1))
         s_inds_g(:,2) = s_inds & s_demogs.group==1;
         s_inds_g(:,3) = s_inds & s_demogs.group==2;
@@ -83,8 +90,9 @@ end
 
 fprintf('%d total subjects remain\n', sum(s_inds_g(:,1)) )
 
-g_label={'All Subjects','CTL','ALC'};
-g_color={'k','c','m'};
+%g_label={'All Subjects','CTL','ALC'};
+g_label={'All Subjects','Male','Female'};
+g_color={'k','g','r'};
 g_all=1;
 
 nameOfStruct2Update='scl';

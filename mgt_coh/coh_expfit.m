@@ -562,17 +562,20 @@ sstyles={'ks','ms'};
 hyp_colors=distinguishable_colors(length(opt.pair_indlbls)+2);
 hyp_colors(6:7,:)=[];
 clear overtitle;
-for freq_range=1:2
+for freq_range=1:5
 f=figure;
 [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));
 [~,f_end]=min(abs(scl.freqs-pp.f_end_hz(freq_range)));
 overtitle=sprintf('%1.1f - %1.1f Hz, %d - %d ms',pp.f_start_hz(freq_range), ...
     pp.f_end_hz(freq_range), timeregion(1), timeregion(2));
 
-for group=pp.plotn_g
+for group=3
 
 plotdata=zeros(length(p_dists_jit),2);
-plotdata(:,1)=meanx(cohdata(t_start:t_end,f_end:f_start,:,:,s_inds_g(:,group)),4);
+%plotdata(:,1)=meanx(cohdata(t_start_b:t_end_b,f_end:f_start,:,:,s_inds_g(:,group)),4);
+%plotdata(:,2)=meanx(cohdata(t_start:t_end,f_end:f_start,:,:,s_inds_g(:,group)),4);
+
+plotdata(:,1)=meanx(rcohdata(:, f_end:f_start,s_inds_g_r(:,group)),1);
 plotdata(:,2)=meanx(cohdata(t_start_b:t_end_b,f_end:f_start,:,:,s_inds_g(:,group)),4);
 
 %statdata = cell(2,1);
@@ -582,7 +585,7 @@ plotdata(:,2)=meanx(cohdata(t_start_b:t_end_b,f_end:f_start,:,:,s_inds_g(:,group
 %imp_inds = abs(diff(plotdata,1,2)) > median(abs(diff(plotdata,1,2)));
 %imp_inds = pair_hypinds;
 %imp_inds = true(size(p_dists_jit));
-imp_inds = 1:41;
+imp_inds = 1:90;
 %imp_inds = [42:90]';
 %[stats df pvals] = statcond( statdata, 'paired','on', 'method', 'perm', 'naccu', n_perms, ...
 %    'alpha', p_alpha, 'structoutput', 'on');
@@ -598,12 +601,12 @@ for pair=imp_inds
     line([p_dists_jit_plot(pair) p_dists_jit_plot(pair)], [plotdata(pair,1) plotdata(pair,2)], ...
         'Color',hyp_colors(opt.pair_inds(pair),:),'LineWidth',1); hold on;
 end
-axis([min(p_dists_jit_plot)-1 max(p_dists_jit_plot)+1 0.1 0.8]); grid on;
+axis([min(p_dists_jit_plot)-1 max(p_dists_jit_plot)+1 0 0.8]); grid on;
 xlabel('Pseudo-distance (prop. cm)'); ylabel('ISPC');
 title(overtitle);
 hyp_plotlbl_inds = unique(opt.pair_inds(imp_inds));
 hyp_plot_lbls=opt.pair_indlbls{hyp_plotlbl_inds};
-for hyp=1:3 %length(opt.pair_indlbls)    %hyp_plotlbl_inds'
+for hyp=1:length(opt.pair_indlbls)    %hyp_plotlbl_inds'
     text(max(p_dists_jit_plot)*.75, 0.7-(hyp/40), sprintf('%s', opt.pair_indlbls{hyp} ),'Color', ...
         hyp_colors(hyp,:)); hold on;
 end
@@ -688,11 +691,11 @@ y_plotlabel='ISPC (prop. of baseline)';
 sp_d = numSubplots(length(opt.pair_indlbls));
 
 sstyles={'g^','r^'};
-diffthresh = 0.12;
+diffthresh = 0.1;
 
 hyp_colors=distinguishable_colors(length(opt.pair_indlbls),'g');
 clear overtitle;
-group=1;
+group=3;
 for freq_range=2
 figure;
 [~,f_start]=min(abs(scl.freqs-pp.f_start_hz(freq_range)));

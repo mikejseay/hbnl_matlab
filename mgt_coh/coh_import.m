@@ -26,14 +26,14 @@ end
 ns=length(mat_list);
 
 %size of data dimensions, taking into account a time-downsampling factor
-erpmaxtimepts = opt.n_samps - 2;
+erpmaxtimepts = opt.n_samps - 4;
 times2import=1:erpmaxtimepts;
 erptimerate = opt.rate;
 
 if isfield(opt, 'tf_timedownsamp_ratio')
     tf_downsamp = tf_downsamp / opt.tf_timedownsamp_ratio;
-    tfmaxtimepts = round((opt.n_samps)/(opt.tf_timedownsamp_ratio*tf_downsamp));
-    tf_endpt = round(opt.n_samps/opt.tf_timedownsamp_ratio);
+    tfmaxtimepts = round((opt.n_samps)/(opt.tf_timedownsamp_ratio*tf_downsamp)) - 1;
+    tf_endpt = round(opt.n_samps/opt.tf_timedownsamp_ratio) - 1;
     tftimes2import=1:tf_downsamp:tf_endpt;
     tftimerate=opt.rate/(tf_downsamp*opt.tf_timedownsamp_ratio);
 else

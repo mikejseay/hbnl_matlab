@@ -20,12 +20,16 @@ elseif version==2015
     matlabpath_prefix='/software/matlab2015b';
 end
 
-if opt.cleanset
-    matlabcommand=[matlabpath_prefix, '/bin/matlab -nodisplay'];
+if isfield(opt, 'cleanset')
+    if opt.cleanset
+        matlabcommand=[matlabpath_prefix, '/bin/matlab -nodisplay'];
+    else
+        matlabcommand=[matlabpath_prefix, '/bin/matlab -nojvm -nodisplay'];
+    end
 else
     matlabcommand=[matlabpath_prefix, '/bin/matlab -nojvm -nodisplay'];
 end
-
+    
 n_batches=length(opt.batchscripts);
 n_sets=ceil(n_batches/simul_batches);
 
@@ -37,6 +41,7 @@ if ~unix_bool
         if set==n_sets && set>1
             end_ind=start_ind+rem(n_batches,simul_batches)-1;
         else
+            %if 
             end_ind=set*simul_batches;
         end
 

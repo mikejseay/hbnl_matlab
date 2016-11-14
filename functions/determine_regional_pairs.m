@@ -36,20 +36,28 @@ if n_channels ~= 61
     return
 end
 
-if sparse_logic
-    frontal=[5 6 7 8 9 34 35 43 44 47];
-    central=[16 17 18 39 40 41 42 52 53 56];
-    parietal=[21 22 23 24 25 48 49 59 60 61];
-    occipital=[28 29 30 31 54 55 57 58];
-    lefttemporal=[15 19 27 36 46 50];
-    righttemporal=[14 20 26 37 45 51];
-else
-    frontal=[1 2 3 4 5 6 7 8 9 32 33 34 35 38 43 44 47];
-    central=[10 11 12 13 16 17 18 39 40 41 42 52 53 56];
-    parietal=[21 22 23 24 25 48 49 59 60 61];
-    occipital=[28 29 30 31 54 55 57 58];
-    lefttemporal=[15 19 27 36 46 50];
-    righttemporal=[14 20 26 37 45 51];
+switch sparse_logic
+    case 1
+        frontal=[5 6 7 8 9 34 35 43 44 47];
+        central=[16 17 18 39 40 41 42 52 53 56];
+        parietal=[21 22 23 24 25 48 49 59 60 61];
+        occipital=[28 29 30 31 54 55 57 58];
+        lefttemporal=[15 19 27 36 46 50];
+        righttemporal=[14 20 26 37 45 51];
+    case 0
+        frontal=[1 2 3 4 5 6 7 8 9 32 33 34 35 38 43 44 47];
+        central=[10 11 12 13 16 17 18 39 40 41 42 52 53 56];
+        parietal=[21 22 23 24 25 48 49 59 60 61];
+        occipital=[28 29 30 31 54 55 57 58];
+        lefttemporal=[15 19 27 36 46 50];
+        righttemporal=[14 20 26 37 45 51];
+    case 2 % 8 in each of F, P, O
+        frontal=[5 6 7 8 9 34 35 47];
+        central=[16 17 18 39 40 41 42 52 53 56];
+        parietal=[23 24 25 26 27 48 49 61];
+        occipital=[28 29 30 31 54 55 57 58];
+        lefttemporal=[15 19 36 46 50];
+        righttemporal=[14 20 37 45 51];
 end
 
 region_names={'frontal','central','parietal','occipital','lefttemporal','righttemporal'};

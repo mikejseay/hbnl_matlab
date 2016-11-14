@@ -1,9 +1,14 @@
-function EEG = import_hdftrials_eeglab_inline(data_file,data,h1_struct)
+function EEG = import_hdftrials_eeglab_inline(data_file,data,h1_struct_orrate)
+
+if isstruct(h1_struct_orrate)
+    cnt_srate=h1_struct_orrate.experiment_struct.rate; 
+elseif isnumeric(h1_struct_orrate)
+    cnt_srate=h1_struct_orrate;
+end
 
 %pull out the set name automatically, get the data, and sampling rate
 [~,setname,~]=fileparts(data_file);
 cnt_data=permute(data,[3 1 2]);
-cnt_srate=h1_struct.experiment_struct.rate; 
 
 %import data, must be channels x timepts x trials
 EEG = pop_importdata('setname',setname,'data',cnt_data,'dataformat','array',...

@@ -1,4 +1,4 @@
-function [scl, pp] = coh_plotparams(imp,scl,cond_diff)
+function [scl, pp] = coh_plotparams(imp, scl, cond_diff)
 % set certain plotting parameters for coh_analysis
 
 %cond_diff={[1 2],[3 4]}; %[6],[7]};
@@ -38,33 +38,33 @@ if ~exist('tfparams','var')
 %f_indiv_hz=[2.6, 3.9, 4.6, 6.1,  10,  18, 28,    4, 6, 5]; %indiv bands
 
 f_start_hz=[2,   4,   8,    14, 26, 3, 5];     %lower edges
-f_end_hz=[  3,   6,   13,   24, 32, 5, 7];  %upper edges
+f_end_hz=[  3,   7,   13,   25, 32, 5, 7];  %upper edges
 f_indiv_hz=[2.5, 5.5, 10.5, 19, 29, 4, 6]; %indiv bands
 
 else
-f_start_hz=[2, 3, 5, 8,  13];   %lower edges
+f_start_hz=[2, 3, 5, 9,  13];   %lower edges
 f_end_hz=[  2, 5, 7, 12, 24];   %upper edges
 f_indiv_hz=[2, 4, 6, 10, 18];   %indiv bands
 end
 chosen_freq=[6 10 13 16 19];
 
-chosen_g=[2 3];
+chosen_g=[2 3]; %[1]; %
 chosen_p=[14 12 4 9];
 
 %t_start_ms=[0 100 200 300 400 600];
 %t_end_ms=[100 200 300 400 600 800];
 
-%t_win_start=-1000;
-%t_win_end=500;
-%t_win_space=100;
-%t_start_ms=[t_win_start:t_win_space:t_win_end];
-%t_end_ms=t_start_ms+t_win_space;
+t_win_start=0;
+t_win_end=500;
+t_win_space=100;
+t_start_ms=[t_win_start:t_win_space:t_win_end];
+t_end_ms=t_start_ms+t_win_space;
 
 %t_start_ms=[90 160 250 290 340 400 500]; %-600
 %t_end_ms=[110 180 270 310 380 500 600]; %-200
 
-t_start_ms=[0 200 400 600];
-t_end_ms=[200 400 600 800];
+%t_start_ms=[0 200 400 600];
+%t_end_ms=[200 400 600 800];
 
 t_start_b_ms=-500;
 t_end_b_ms=-200;

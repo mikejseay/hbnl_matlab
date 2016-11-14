@@ -45,6 +45,10 @@ else
         poscolor = 'Purples';
         negcolor = 'Oranges';
         monocolor='Greens';
+    else
+        poscolor = 'Purples';
+        negcolor = 'Oranges';
+        monocolor='Greens';
     end 
 end
 

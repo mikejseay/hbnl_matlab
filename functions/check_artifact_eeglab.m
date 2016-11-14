@@ -5,9 +5,12 @@ function trial_mat_out = check_artifact_eeglab(data_file, data, h1_struct, ...
 EEG = import_hdftrials_eeglab_inline(data_file, data, h1_struct);
 EEG = eeg_checkset( EEG );
 
+% filter the data?
+%EEG = pop_eegfiltnew(EEG, 30, []);
+
 %run the automatic epoch rejection
 [EEG, rmepochs] = pop_autorej(EEG, 'threshold', uvthresh, 'electrodes', chans, ...
-    'startprob', sdthresh, 'maxrej', 15, 'nogui', 'on');
+    'startprob', sdthresh, 'maxrej', 20, 'nogui', 'on');
 
 %use the output to mask the trial indexing scheme
 rmepochs=sort(rmepochs);

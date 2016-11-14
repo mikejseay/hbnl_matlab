@@ -1,0 +1,2 @@
+path = '/export/home/mike/avg_hp003_t75/';
+files = dir(path);

@@ -1,7 +1,7 @@
 function [scales,cycles,freqs]=findCWTscales(n_samps,srate,freq_lims,padratio,cycle_params)
 
 if nargin<5
-    cycle_params=[3 0.5];
+    cycle_params=[3 0.8];
 end
 
 %srate=256;

@@ -247,9 +247,9 @@ end
 
 % do wavelet calcuation
 n_scales = numel(opt.wavelet_scales);
-if isfield(opt, 'wavelet_type') && isfield(opt, 'cycle_edges')
-    if strcmpi(opt.wavelet_type,'lin_cycles') && length(opt.cycle_edges)==2
-        dataW = wavelet_calc2(dataR, opt.wavelet_scales, opt.rate, opt.cycle_edges);
+if isfield(opt, 'wavelet_cycles')
+    if ~isempty(opt.wavelet_cycles)
+        dataW = wavelet_calc2(dataR, opt.wavelet_scales, opt.wavelet_cycles);
     else
         dataW = wavelet_calc(dataR, opt.wavelet_scales);
     end
