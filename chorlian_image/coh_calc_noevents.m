@@ -95,6 +95,8 @@ if ~exist(cleanfile_path,'file')
             EOG = clean_drifts(EOG, hpfilt_bands);
             eog_data = EOG.data';
             clear EOG
+        else
+            eog_data = [];
         end
         
         % cut out only the channels of interest

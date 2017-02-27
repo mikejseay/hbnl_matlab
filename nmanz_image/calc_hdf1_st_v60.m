@@ -1,4 +1,4 @@
-function calc_hdf1_st_v60(cnthdf1_filename, working_directory, the_case, chan_list_type, baseline_type, st_baseline_time_min_ms, st_baseline_time_max_ms, min_trials, max_trials, new_pre_stim_time_ms, new_threshold_value, new_threshold_min_time_ms, new_threshold_max_time_ms, new_hi_pass, new_lo_pass, new_threshold_electrodes, response_min_time, response_max_time, trial_plot, trial_files)
+function h1_struct = calc_hdf1_st_v60(cnthdf1_filename, working_directory, the_case, chan_list_type, baseline_type, st_baseline_time_min_ms, st_baseline_time_max_ms, min_trials, max_trials, new_pre_stim_time_ms, new_threshold_value, new_threshold_min_time_ms, new_threshold_max_time_ms, new_hi_pass, new_lo_pass, new_threshold_electrodes, response_min_time, response_max_time, trial_plot, trial_files)
 %
 % adding of new_hi_pass and new_lo_pass variables                                           (Niklas, 2008-07-21)
 % adding of new_threshold_electrodes variable                                               (Niklas, 2008-07-21)
@@ -97,7 +97,7 @@ end
 fname = [working_directory, sub_id, '.', exp_case_type, '.st.mat'];
 
 if (exist(fname, 'file') ~= 0) % st file already exits
-    return
+    % return
 end
 
 % adding the upper limit of the response_window to the h1_struct
@@ -613,5 +613,5 @@ h1_struct.data_struct.hdf1_epoch_data = 0;
 % remove 'hdf1_prestim_epoch_data', 'hdf1_orig_data', 'hdf1_avg_data' from bloated v4-mat-files (from David, 2014-03-28)
 %h1_struct.data_struct = rmfield(h1_struct.data_struct, {'hdf1_prestim_epoch_data', 'hdf1_orig_data', 'hdf1_avg_data'});
 
-save(fname, 'h1_struct');
+%save(fname, 'h1_struct');
 

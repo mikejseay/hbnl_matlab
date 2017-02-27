@@ -1,5 +1,5 @@
 %
-% function extract_st_bands_v6.0
+% function extract_st_bands_v4.0
 %
 % modified by Niklas Manz on (2007-06-18)
 %
@@ -13,25 +13,25 @@ clear;
 
 path(path,'/export/home/kevjones/progs/hdf1progs/hdf1tools/hdf1matlab/');
 path(path,'/export/home/nmanz/programs/matlab/');
-path(path,'/export/home/mort/programs/matlab/');
+path(path,'/export/home/mike/programs/matlab/');
 
 current_time = datestr(now, 'mm-dd-yyyy-HH-MM-SS-FFF');
 
-slog_dir = '/active_projects/ERO_scripts/matlab_slogs/'
-slog_filenm = [current_time, '.slog']
-slog_path = fullfile(slog_dir, slog_filenm)
-slog_fid = fopen(slog_path, 'w')
+slog_dir = '/active_projects/ERO_scripts/matlab_slogs/';
+slog_filenm = [current_time, '.slog'];
+slog_path = fullfile(slog_dir, slog_filenm);
+slog_fid = fopen(slog_path, 'w');
 
 try
 
     do_baseline 				= 0;							% -b (0=no default, 1=yes)
-    st_type 						= 2;							% -d (1=total, 2=evoked, 3=induced (tot-evk))
-    channel_sort				= 1;					% -e (1=old elec_list default, 2=rows across head, 3=rows within 6 regions, own elec_list)
-    electrodes_string 		= '';						% -e
+    st_type 						= 1;							% -d (1=total, 2=evoked, 3=induced (tot-evk))
+    channel_sort				= 4;					% -e (1=old elec_list default, 2=rows across head, 3=rows within 6 regions, own elec_list)
+    electrodes_string 		= '13 16 2 10 18 5 4 19 11';						% -e
     electrodes_array 			= sscanf(electrodes_string, '%f');	% -e
-    inp_files 					= '/processed_data/EROprc_lists/6-e3-hi03-lo45-k187-n15-o25-p100-t100-u187-y187-z50-gng-g-64_mats-1477926446654_L2794.lst';				% -f
+    inp_files 					= '/processed_data/EROprc_lists/4-e1-n10-s9-t100-v800-vp3-tt-64_mats-1479385001913_L14369.lst';				% -f
     calc_type 					= 1;							% -m (1=mean default, 2=max, 3=centroid, 4=maxfreq, 5=maxtime, 6=sum)
-    output_text	        		= '';						% -o
+    output_text	      	     	= '';						% -o
     out_type 					= 1;							% -p (1=power (lin), 2=amplitude (lin), 3=power (ln), 4=amplitude (ln))
     add_baseline 				= 0;					% -q (0=no, 1=yes default)
     frequencies_min_string 	= '1';				% -v (1= all bands default, 2=single frequencies, 3=lower bands, 4=higher bands, own freq_file)	
@@ -70,9 +70,9 @@ try
     end
 
     if (length(output_text) == 0)
-        out_text = ['v6.0.csv'];
+        out_text = ['v4.0.csv'];
     else
-        out_text = ['_v6.0_',output_text,'.csv'];
+        out_text = ['_v4.0_',output_text,'.csv'];
     end
 
     [file_names] = textread(inp_files,'%s');
@@ -89,35 +89,23 @@ try
 
     %%% NEW %%%
 
-    prc_version = '6';
+    prc_version = '4';
     exp_name   = h1_struct.st_struct.exp_name;
     case_name  = h1_struct.st_struct.exp_case_type;
     elec_array = strvcat(h1_struct.st_struct.channel_list);
     n_chans    = size(elec_array, 1);
 
-    out_dir = '/active_projects/ERO_scripts/matlab_outputs/'
-    log_dir = '/active_projects/ERO_scripts/matlab_logs/'
-
-    out_filenm = [prc_version, '-', exp_name, '-', case_name, '-', num2str(n_chans), '-', current_time, '.output']
-    log_filenm = [prc_version, '-', exp_name, '-', case_name, '-', num2str(n_chans), '-', current_time, '.log']
-
-    log_path = fullfile(log_dir, log_filenm)
-    out_path = fullfile(out_dir, out_filenm)
-
-    log_fid = fopen(log_path, 'w')
-    out_fid = fopen(out_path, 'w')
+    log_dir = '/active_projects/ERO_scripts/matlab_logs/';
+    log_filenm = [prc_version, '-', exp_name, '-', case_name, '-', num2str(n_chans), '-', current_time, '.log'];
+    log_path = fullfile(log_dir, log_filenm);
+    log_fid = fopen(log_path, 'w');
 
 catch err
 
     fprintf(slog_fid, '%s: ', err.message);
-    
+
 end
 
-
-%%% ALSO CHANGE ALL INSTANCES OF fid(k_freq_file) TO out_fid %%%
-%%% AND GET RID OF LINE ~180 WHERE IT WOULD HAVE BEEN CREATED %%%
-
-%%% NEW %%%
 
 try
 
@@ -222,8 +210,6 @@ try
                 '_base', '_m', num2str(calc_type), '_', st_type_name,'-', out_type_name, out_text];
         end
 
-        fprintf(out_fid, 'ID,session,run');
-
         if (channel_sort == 2) %sorting along the rows across the head
             if (n_chans == 19)
                 new_sort = [15,17, 12,13,16,2,3, 8,10,18,5,7, 6,4,19,11,9, 1,14];
@@ -254,59 +240,7 @@ try
             end
 
         end
-        if (channel_sort == 4) %using given electrode list
-            n_chans  = size(electrodes_array,1);
-            new_sort = electrodes_array;
-        end
 
-        if (channel_sort == 1)
-            if (n_chans == 32) n_chans = 31; end;
-            for k=1:n_chans
-    	    if (ln_calc == 1)
-                	% fprintf(out_fid, ',%s_ln_%s', strtrim(elec_array(k,:)), case_name);
-                	fprintf(out_fid, ',%s_ln', strtrim(elec_array(k,:)));
-    	    else	
-                	% fprintf(out_fid, ',%s_%s', strtrim(elec_array(k,:)), case_name);
-                	fprintf(out_fid, ',%s', strtrim(elec_array(k,:)));
-    	    end
-            end
-    	if (add_baseline == 1)
-            for k=1:n_chans
-    	    if (ln_calc == 1)
-                	% fprintf(out_fid, ',%s_ln_BASE_%s', strtrim(elec_array(k,:)), case_name);
-                	fprintf(out_fid, ',%s_ln_BASE', strtrim(elec_array(k,:)));
-    	    else	
-                	% fprintf(out_fid, ',%s_BASE_%s', strtrim(elec_array(k,:)), case_name);
-                	fprintf(out_fid, ',%s_BASE', strtrim(elec_array(k,:)));
-                end
-    	end
-    	end
-        else
-            for k = 1:n_chans
-                l = new_sort(k);
-    	    if (ln_calc == 1)
-                 	% fprintf(out_fid, ',%s_ln_%s', strtrim(elec_array(l,:)), case_name);
-                 	fprintf(out_fid, ',%s_ln', strtrim(elec_array(l,:)));
-     	    else	
-                	% fprintf(out_fid, ',%s_%s', strtrim(elec_array(l,:)), case_name);
-                	fprintf(out_fid, ',%s', strtrim(elec_array(l,:)));
-    	    end
-            end
-    	if (add_baseline == 1)
-                for k=1:n_chans
-                	l = new_sort(k);
-     	    if (ln_calc == 1)
-                 	% fprintf(out_fid, ',%s_ln_BASE_%s', strtrim(elec_array(l,:)), case_name);
-                 	fprintf(out_fid, ',%s_ln_BASE', strtrim(elec_array(l,:)));
-     	    else	
-               	% fprintf(out_fid, ',%s_BASE_%s', strtrim(elec_array(l,:)), case_name);
-               	fprintf(out_fid, ',%s_BASE', strtrim(elec_array(l,:)));
-    		end
-                end
-    	end
-
-        end
-        fprintf(out_fid, '\n');
     end
 
     for i_file = 1:n_input_files
@@ -361,109 +295,96 @@ try
                 end    
             end
 
-            %%%%%%%%%%%%%%%%%%%%%%%%
-            % cutting h1_struct.st_struct.n_chans down if size(h1_struct.data_struct.hdf1_avg_st_data) is smaller
-
-            if ( size(h1_struct.data_struct.hdf1_avg_st_data,1) < n_chans )
-                 n_chans = size(h1_struct.data_struct.hdf1_avg_st_data,1);
-            end
-            %%%%%%%%%%%%%%%%%%%%%%%%
+        %    %%%%%%%%%%%%%%%%%%%%%%%%
+        %    % cutting h1_struct.st_struct.n_chans down if size(h1_struct.data_struct.hdf1_avg_st_data) is smaller
+        %
+        %    if ( size(h1_struct.data_struct.hdf1_avg_st_data,1) < n_chans )
+        %         n_chans = size(h1_struct.data_struct.hdf1_avg_st_data,1);
+        %    end
+        %    %%%%%%%%%%%%%%%%%%%%%%%%
 
             %%% NEW CODE FOR SAVING 3D ARRAYS OF S_VALUES %%%
-            if size(h1_struct.data_struct.hdf1_avg_st_data, 2) == 417
 
-                h1_struct.data_struct.hdf1_avg_st_data = h1_struct.data_struct.hdf1_avg_st_data(:, 1:385);
-                h1_struct.data_struct.hdf1_ind_st_data = h1_struct.data_struct.hdf1_ind_st_data(:, 1:386);
+            % clip times before entering into s-transform so that frequencies
+            % are uniformly chosen
 
-            end
+            % hardcode_start_ms = -187.5;
+            % hardcode_end_ms = 1000;
             
+            % if abs(hardcode_start_ms) > h1_struct.experiment_struct.pre_stim_time_ms
+            %     fprintf(log_fid, '%s did not have enough pre-stimulus time\n', filenm)
+            %     continue
+            % end
+
+            % if hardcode_end_ms > h1_struct.experiment_struct.post_stim_time_ms
+            %     fprintf(log_fid, '%s did not have enough post-stimulus time\n', filenm)
+            %     continue
+            % end
+            
+            % rate = h1_struct.experiment_struct.rate;
+            % time_vec_tmp = (-h1_struct.experiment_struct.pre_stim_time_ms:(1000/rate): ...
+            %     h1_struct.experiment_struct.post_stim_time_ms)';
+            % [junk, start_idx] = min(abs(time_vec_tmp - hardcode_start_ms));
+            % [junk, end_idx] = min(abs(time_vec_tmp - hardcode_end_ms));
+
+            % h1_struct.data_struct.hdf1_avg_st_data = h1_struct.data_struct.hdf1_avg_st_data(:, start_idx:end_idx);
+            % h1_struct.data_struct.hdf1_ind_st_data = h1_struct.data_struct.hdf1_ind_st_data(:, start_idx:end_idx);
+
             [S_values, Sbase_values, S_all, t, f] = calc_chanlist_stockwell_values_ms(h1_struct, ...
                 freqs_min_array, freqs_max_array, t_min, t_max, calc_type, ...
                 h1_struct.st_struct.channel_list, st_type, do_baseline, ...
                 h1_struct.st_struct.baseline_type, h1_struct.st_struct.st_baseline_time_min_ms, ...
                 h1_struct.st_struct.st_baseline_time_max_ms, out_type);
-            %%% NEW CODE FOR SAVING 3D ARRAYS OF S_VALUES %%%
 
-            for k_freq_file=1:n_freq_files
-
-                band1 = freqs_min_array(k_freq_file);
-                band2 = freqs_max_array(k_freq_file);
-
-                fprintf(out_fid, '%s,%s,%s', file_id, file_session, num2str(file_run));
-
-                if (channel_sort == 1)
-                		for k=1:n_chans
-                        S_band_value = S_values{k}{k_freq_file};
-                        if (ln_calc == 1) S_band_value = log(S_band_value); end
-                        fprintf(out_fid, ',%f', S_band_value);
-                    end
-        	     		if (add_baseline == 1)
-                    	for k=1:n_chans
-                       	 Sbase_band_value = Sbase_values{k}{k_freq_file};
-                        	if (ln_calc == 1) Sbase_band_value = log(Sbase_band_value); end
-                        	fprintf(out_fid, ',%f', Sbase_band_value);
-                    	end
-        	    		end
-                else
-                    for k = 1:n_chans
-                        l = new_sort(k);
-                       	S_band_value = S_values{l}{k_freq_file};
-                        if (ln_calc == 1) S_band_value = log(S_band_value); end
-                        fprintf(out_fid, ',%f', S_band_value);
-                    end
-         	    		if (add_baseline == 1)
-                   		for k=1:n_chans
-                       	  l = new_sort(k);
-                            Sbase_band_value = Sbase_values{l}{k_freq_file};
-                            if (ln_calc == 1) Sbase_band_value = log(Sbase_band_value); end
-                            fprintf(out_fid, ',%f', Sbase_band_value);
-                    	end
-        	    		end
-                end
-                fprintf(out_fid, '\n');
-            end
-
-            %%% NEW CODE FOR SAVING 3D ARRAYS OF S_VALUES %%%
-            f_ds_vec = (f>=0.5 & f<=45)';
+            f_ds_vec = (f>=0.5 & f<=50)';
             f_vec = f';
             f_vec_ds = f(f_ds_vec)';
             
             rate = h1_struct.experiment_struct.rate;
             time_ds_factor = 2;
             time_vec = (-h1_struct.experiment_struct.pre_stim_time_ms:(1000/rate): ...
-                h1_struct.experiment_struct.post_stim_time_ms)';
-            time_cut_vec = (time_vec>=-200 & time_vec<=1200);
+            h1_struct.experiment_struct.post_stim_time_ms)';
+            time_cut_vec = (time_vec>=-400 & time_vec<=1000);
             time_downsamp_vec = false(size(time_vec));
             time_downsamp_vec(1:time_ds_factor:end) = true;
             time_ds_vec = time_cut_vec & time_downsamp_vec;
             time_vec_ds = time_vec(time_ds_vec);
 
+            % time_ds_factor = 2;
+            % time_vec = (-hardcode_start_ms:(1000/rate):hardcode_end_ms)';
+            % time_ds_vec = false(size(time_vec));
+            % time_ds_vec(1:time_ds_factor:end) = true;
+            % time_vec_ds = time_vec(time_ds_vec);
+
             n_chans_present = size(S_all, 3);
             
-            folderparts = strread(filenm,'%s','delimiter','/');
-            nameparts = strread(folderparts{end},'%s','delimiter','_');
-            extparts = strread(nameparts{end},'%s','delimiter','.');
-            
-            session_part = nameparts{3};
-            id = nameparts{4};
-            session = session_part(1);
-            param_str = folderparts{end-2};
-            case_part = extparts{3};
-            case_name = case_part;
+            n_trials = h1_struct.st_struct.num_trials;
+            st_baseline_time_min_ms = h1_struct.st_struct.st_baseline_time_min_ms;
+            st_baseline_time_max_ms = h1_struct.st_struct.st_baseline_time_max_ms;
+            hp_filter = h1_struct.st_struct.hp_filter;
+            lp_filter = h1_struct.st_struct.lp_filter;
             
             opt = v2struct(add_baseline, calc_type, case_name, channel_sort, do_baseline, ...
                 elec_array, exp_name, file_id, filenm, file_run, ...
-                file_session, i_file, ln_calc, n_chans, n_chans_present, ...
+                file_session, ln_calc, n_chans, n_chans_present, ...
                 out_type, out_type_name, ...
-                output_text, st_type, st_type_name, ...
-                f_vec, f_vec_ds, rate, time_ds_factor, time_vec, time_vec_ds);
+                st_type, st_type_name, ...
+                f_vec, f_vec_ds, rate, time_ds_factor, time_vec, time_vec_ds, ...
+                n_trials, st_baseline_time_min_ms, st_baseline_time_max_ms, hp_filter, lp_filter);
             
             S_all_ds = S_all(f_ds_vec, time_ds_vec, :);
             clear S_all
             data = single(S_all_ds);
             clear S_all_ds
             
-            parent_dir = '/processed_data/ero-mats-V6';
+            folderparts = strread(filenm,'%s','delimiter','/');
+            nameparts = strread(folderparts{end},'%s','delimiter','_');
+            session_part = nameparts{3};
+            id = nameparts{4};
+            session = session_part(1);
+            param_str = folderparts{end-2};
+            
+            parent_dir = '/processed_data/ero-mats-v40';
             outname = [strjoin({id, session, exp_name, case_name, st_type_name}, '_'),'.mat'];
             outdir = fullfile(parent_dir, param_str, num2str(n_chans_present), exp_name);
             outpath = fullfile(outdir, outname);
@@ -492,4 +413,3 @@ end
 
 fclose(slog_fid);
 fclose(log_fid);
-fclose(out_fid);

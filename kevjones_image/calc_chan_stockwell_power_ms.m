@@ -59,7 +59,7 @@ end
 
 x_avg = squeeze(h1_struct.data_struct.hdf1_avg_st_data(channel_idx,:));
 x_ind = squeeze(h1_struct.data_struct.hdf1_ind_st_data(channel_idx,:));
-x_base_ind = squeeze(h1_struct.data_struct.hdf1_ind_st_base_data(channel_idx,:));
+% x_base_ind = squeeze(h1_struct.data_struct.hdf1_ind_st_base_data(channel_idx,:));
 
 [st_x_avg,t,f] = stockwell_transform(x_avg, 0, length(x_avg)/2, 1/rate);
 [st_x_ind,t,f] = stockwell_transform(x_ind, 0, length(x_ind)/2, 1/rate);

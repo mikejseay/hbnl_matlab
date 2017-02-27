@@ -176,6 +176,8 @@ if ~exist(cleanfile_path,'file')
             EOG = clean_drifts(EOG, hpfilt_bands);
             eog_data = EOG.data';
             clear EOG
+        else
+            eog_data = [];
         end
         
         % cut out only the channels of interest
@@ -589,17 +591,17 @@ end
 %    Y.wave_evk = wavelet_evk;
 %end
 if any(ismember(opt.measures,'wave_evknorm'))
-    Y.wave_evknorm = wavelet_evknorm;
+    Y.wave_evknorm = single(wavelet_evknorm);
 end
 %if any(ismember(opt.measures,'wave_tot'))
 %    Y.wave_tot = wavelet_tot;
 %end
 if any(ismember(opt.measures,'wave_totpow'))
-    Y.wave_totpow = wavelet_totpow;
+    Y.wave_totpow = single(wavelet_totpow);
 end
 if any(ismember(opt.measures,'erptrial')) && exist('dataR','var')
     %[~, ~, dataF] = hdf_reshape(dataF, h1_struct, opt);
-    Y.erptrial = dataR(:, any(trial_mat,2), :); %accept only good trials
+    Y.erptrial = single(dataR(:, any(trial_mat,2), :)); %accept only good trials
     Y.erptrial_log = trial_mat(any(trial_mat,2),:);
     Y.erptrial_evnums = ev_nums(any(trial_mat,2));
 end
@@ -682,7 +684,7 @@ if isfield(opt,'coherence_pairs')
         coh_results = [];
     end
     if any(ismember(opt.measures,'coh'))
-        Y.coh = coh_results;
+        Y.coh = single(coh_results);
     end
 end
 
