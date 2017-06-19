@@ -530,7 +530,7 @@ elseif strcmpi(opt.epochrej_method,'both') && isfield(opt,'simple_thresh') ...
     end
     trial_mat_both = repmat(trial_mat, [1 1 2]);
     prop_kept_simple = 0;
-    while prop_kept_simple < 0.5
+    while prop_kept_simple < 0.6
         trial_mat_both(:,:,1) = check_artifact(dataR(artf_samp_vec, :, :), trial_mat_orig, ...
             artf_chan_vec, opt.simple_thresh);
         prop_kept_simple = sum(sum(trial_mat_both(:,:,1)))/sum(sum(trial_mat_orig));
@@ -539,7 +539,7 @@ elseif strcmpi(opt.epochrej_method,'both') && isfield(opt,'simple_thresh') ...
     fprintf(1, 'Simple uV threshold used was %1.2f\n', opt.simple_thresh - uv_add_amt);
     prop_kept_eeglab = 0;
     start_sd_thresh = 4;
-    while prop_kept_eeglab < 0.5
+    while prop_kept_eeglab < 0.6
         trial_mat_both(:,:,2) = check_artifact_eeglab(data_file, dataR(artf_samp_vec, :, :), ...
             h1_struct, trial_mat_orig, start_sd_thresh, opt.eeglab_thresh, artf_chan_vec);
         prop_kept_eeglab = sum(sum(trial_mat_both(:,:,2)))/sum(sum(trial_mat_orig));
